@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BREED SIM 仕様書｜SyFu TOOLS</title>
+<link rel="icon" type="image/png" href="./assets/favicon.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+:root{--bg:#14101d;--panel:#1e1930;--panel2:#262040;--line:#3a3258;--ink:#ece5d8;--sub:#8d86a3;--gold:#e8b64c;--gold-soft:#f0d18a;--blue:#6f9fe0;--shu:#d05045;--green:#7fbf7a;--acc:var(--gold)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Zen Kaku Gothic New',sans-serif;line-height:1.75;
+  background-image:radial-gradient(ellipse 90% 40% at 50% -8%, rgba(232,182,76,.06), transparent)}
+.wrap{max-width:780px;margin:0 auto;padding:18px 18px 90px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 18px;border-bottom:1px solid var(--line);margin-bottom:22px;position:sticky;top:0;background:linear-gradient(180deg,var(--bg) 80%,transparent);z-index:5}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{height:26px;width:auto}
+.brand .pix{width:26px;height:26px;image-rendering:pixelated;display:none}
+.brand b{font-family:'DotGothic16',monospace;font-size:.82rem;letter-spacing:.05em;color:var(--sub)}
+.back{font-family:'DotGothic16',monospace;font-size:.72rem;color:var(--acc);text-decoration:none;border:1px solid var(--line);border-radius:20px;padding:6px 14px;white-space:nowrap;transition:border-color .15s}
+.back:hover{border-color:var(--acc)}
+.dochead{display:flex;align-items:center;gap:8px;font-family:'DotGothic16',monospace;font-size:.66rem;letter-spacing:.14em;color:var(--acc);margin-bottom:6px}
+.dochead::before{content:'';width:22px;height:2px;background:var(--acc)}
+h1{font-family:'DotGothic16',monospace;font-size:1.4rem;line-height:1.35;letter-spacing:.03em;margin:2px 0 4px;color:var(--ink)}
+h2{font-family:'DotGothic16',monospace;font-size:1.02rem;color:var(--gold-soft);margin:30px 0 10px;padding-top:18px;border-top:1px solid var(--line);letter-spacing:.03em}
+h3{font-size:.94rem;color:var(--acc);margin:20px 0 6px;font-weight:700}
+h4{font-size:.85rem;color:var(--sub);margin:14px 0 4px;font-weight:700}
+p{margin:9px 0;font-size:.9rem}
+ul,ol{margin:9px 0 9px 22px;font-size:.9rem}
+li{margin:4px 0}
+strong{color:var(--gold-soft);font-weight:700}
+code{font-family:'DotGothic16',monospace;font-size:.82rem;color:var(--gold);background:#0f0c18;padding:2px 7px;border-radius:5px;white-space:pre-wrap}
+hr{border:none;border-top:1px dashed var(--line);margin:20px 0}
+.tablewrap{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:420px}
+th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--panel2);color:var(--gold-soft);font-weight:700;font-size:.76rem;white-space:nowrap}
+tr:hover td{background:rgba(255,255,255,.02)}
+td code{font-size:.76rem}
+.lead-first h1+p,.intro{color:var(--sub)}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);text-align:center;font-size:.74rem;color:var(--sub);line-height:1.9}
+footer a{color:var(--blue);text-decoration:none}
+@media (max-width:440px){h1{font-size:1.15rem}.wrap{padding:14px 14px 80px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="brand" href="./index.html">
+      <img src="./assets/logo_white.png" alt="SyFu" style="height:20px;width:auto">
+      <b>TOOLS</b>
+    </a>
+    <a class="back" href="./breed.html">← アプリを開く</a>
+  </div>
+  <div class="dochead">SPECIFICATION</div><h1>MANEKINEKO BREED SIM 仕様書</h1>
+<p><strong>SyFu Season 1 ブリード収支シミュレータ（breed.html）</strong> 初心者向け解説版｜2026年7月版</p>
+<hr>
+<h2>1. このツールは何をするもの？</h2>
+<p>SyFuの「ブリード（繁殖）」機能で、<strong>招き猫NFTを掛け合わせて新しいNFTを作るときのコストと確率</strong>を計算するツールです。</p>
+<p>ブリードは「EVT・Econ・鯛焼き（TAIYAKI）」という3種類の通貨・アイテムを消費し、確率でレアな子どもが産まれます。「レアが出るまで平均いくらかかるのか」「運が悪いと最悪いくらかかるのか」を、ゲームを始める前に机上で確認できます。</p>
+<p>ブラウザで開くだけで動きます（インストール不要・通信不要・スマホ対応）。</p>
+<h3>最低限おぼえる用語</h3>
+<div class="tablewrap"><table><thead><tr><th>用語</th><th>意味</th></tr></thead><tbody><tr><td>MANEKINEKO</td><td>SyFuの招き猫NFT。ブリードの「親」になる</td></tr><tr><td>Uncommon / Rare</td><td>NFTのレア度。Rareのほうが希少で高価</td></tr><tr><td>EVT</td><td>換金できるトークン。ブリードの主な支払い手段</td></tr><tr><td>Econ</td><td>ゲーム内通貨。ブリードのたびに消費</td></tr><tr><td>TAIYAKI（鯛焼き）</td><td>ブリードに必要なアイテム。Uncommon用・Rare用・White（Elite抽選用）がある</td></tr><tr><td>Breed Count（BC）</td><td>その親が何回ブリードしたか。<strong>1体最大5回</strong>で打ち止め</td></tr><tr><td>P-rank</td><td>個体の性能ランク（P0〜P4）。高いほど良い</td></tr><tr><td>Prime</td><td>成長の最終段階。<strong>親はPrimeでないとブリード不可</strong></td></tr><tr><td>血統（Z/L/V/N）</td><td>4つの系統グループ。相性（Nicks）の判定に使う</td></tr><tr><td>Nicks</td><td>血統の相性ボーナス。子のP-rankが上振れしやすくなる</td></tr><tr><td>Inbreeding</td><td>同じ個体が家系図の両側に重複すること。位置によって良い効果にも悪い効果にもなる</td></tr><tr><td>Origin / Elite</td><td>特別な個体。家系図でうまく重複させるとRare抽選が発生する</td></tr></tbody></table></div>
+<hr>
+<h2>2. 画面構成（5つのタブ）</h2>
+<h3>タブ01：コスト計算</h3>
+<p><strong>「この2体を掛け合わせたら、1回いくら？」を出す電卓です。</strong></p>
+<ul>
+<li>入力：組み合わせ（U×U／左U×右R／左R×右U／R×R）、左右の親のBreed Count、White鯛焼きの使用有無</li>
+<li>出力：EVT／Econ／鯛焼きの消費量、Rareが出る確率、Elite抽選率</li>
+</ul>
+<p>ポイント：<strong>Econは親のBCが増えるほど高くなります</strong>（1につき+20）。また左右は対等ではなく、Rareを左に置くと右に置くより高くつきます（左Rare+40／右Rare+20）。</p>
+<h3>タブ02：Rare獲得試算</h3>
+<p><strong>「Rareが出るまで合計いくら？」を運の良し悪し3パターンで出します。</strong></p>
+<div class="tablewrap"><table><thead><tr><th>シナリオ</th><th>意味</th></tr></thead><tbody><tr><td>上振れ</td><td>1回目で当たった場合</td></tr><tr><td>期待値</td><td>平均的な回数（確率50%なら2回、20%なら5回、10%なら10回）</td></tr><tr><td>下振れ（90%tile）</td><td>「90%の人はここまでに当たる」回数。運が悪い側の目安</td></tr></tbody></table></div>
+<p>グラフは「n回目までに当たっている確率」の曲線です。赤い点線（90%ライン）に達する回数が下振れの目安。</p>
+<p>ポイント：親は5回で打ち止めなので、<strong>確率10%・20%の組み合わせは当たる前に親が枯れやすい</strong>ことが表から読み取れます。Rareを増やす目的ならR×R（50%）一択です。</p>
+<h3>タブ03：実践ガチャ</h3>
+<p><strong>実際にボタンを押して1回ずつ引く体験モードです。</strong></p>
+<p>まり玉が白（外れ＝Uncommon）か金（当たり＝Rare）に変わり、消費リソース・親の交代・累計が自動記帳されます。確率の「下振れ」がどれくらい起こるかを体感するためのタブです。※乱数はツール内のもので、実際のゲーム結果とは無関係です。</p>
+<h3>タブ04：1体目Golden</h3>
+<p><strong>「Rareを1体も持っていない人」がRareを狙う唯一の計算可能ルートの設計図です。</strong></p>
+<p>Rareの固定抽選（50/20/10%）は「Rareの親」が必要なので、最初の1体には使えません。代わりに、Origin（Genesis血統の特別個体）を家系図の<strong>3世代目×4世代目（Golden）</strong>に重ねると、Rareの上振れ抽選が発生します（当選率は公式非公開）。</p>
+<ul>
+<li>入力：引きたい抽選回数、White鯛焼き併用の有無</li>
+<li>出力：必要な総ブリード数／EVT／Econ／鯛焼き／<strong>Prime育成が必要な体数</strong>／必要Origin数、および家系図の図解</li>
+</ul>
+<p>重要ルール（ツール内にも警告表示）：</p>
+<ol>
+<li><strong>2本の家系図チェーンはOrigin直下から完全に別系統にする</strong>こと。途中の個体を共有すると浅い世代で重複が起きて「Forbidden」判定になり、抽選ごと消えます。</li>
+<li>右親に使うUncommonもチェーン間で使い回し不可。</li>
+<li>完成した「深いペア」は双方BC0なので<strong>同じペアで最大5回</strong>抽選を引き直せます。</li>
+<li>Origin1体（5枠）で作れるのは2ペア＝抽選10回まで。</li>
+<li>本当のボトルネックはお金ではなく<strong>各世代をPrime（Lv10）まで育てる時間</strong>です。</li>
+</ol>
+<h3>タブ05：手持ち最適化</h3>
+<p><strong>自分のNFTを登録すると「目的別にどのペアで交配すべきか」をランキング表示します。</strong></p>
+<p>NFT1体ごとに登録する項目：</p>
+<div class="tablewrap"><table><thead><tr><th>項目</th><th>説明</th></tr></thead><tbody><tr><td>個体名</td><td>自由入力。<strong>同じ名前＝同一個体</strong>としてInbreeding照合に使われる</td></tr><tr><td>レア度／特殊／P-rank</td><td>Uncommon・Rare／なし・Origin・Elite／P0〜P4</td></tr><tr><td>Breed Count</td><td>0〜5（5は交配不可）</td></tr><tr><td>ブリード可</td><td>Prime・寿命40%以上・HP100%・出品/クールダウン外か</td></tr><tr><td>血統系統（自身＋1G〜3G）</td><td>家系図の系統グループ（Z/L/V/N）を4世代分</td></tr><tr><td>Genesis血統の位置</td><td>Genesis血統を持つ場合、その位置</td></tr><tr><td>注目個体</td><td>家系図に入っているOrigin/Elite/重複しうる個体（名前・世代・種別）</td></tr></tbody></table></div>
+<p>目的は6種類から選択：</p>
+<div class="tablewrap"><table><thead><tr><th>目的</th><th>何を優先する？</th></tr></thead><tbody><tr><td>Rare獲得</td><td>固定抽選率（R×R 50% ＞ 左R 20% ＞ 右R 10%）</td></tr><tr><td>高P-rank</td><td>Nicks数（最大3）＋Genesis premium＋左親P2以上</td></tr><tr><td>Good Inbreeding</td><td>Origin/Eliteが3G×4G（Golden）か4G×4G（Stable）で重複するペアのみ</td></tr><tr><td>Special Risk</td><td>特殊個体が浅い世代で重複する低確率の博打（確率非公開）</td></tr><tr><td>Elite生成</td><td>U×U＋White鯛焼き。Eliteは左親のP-rankを継承するので左親のP-rank重視</td></tr><tr><td>コスト最小</td><td>EVT＋Econが最小のペア</td></tr></tbody></table></div>
+<p>結果カードには順位・コスト・判定チップ（Rare率/Nicks/GOLDEN/FORBIDDENなど）・推薦理由が表示されます。<strong>同じ2体でも左右を入れ替えて両方評価</strong>します（コスト・確率・血統継承すべて左右で変わるため）。</p>
+<hr>
+<h2>3. 計算式（かみ砕き版）</h2>
+<p>すべてSyFu公式GitBook第9章（Season 1）の数値です。</p>
+<p><strong>1回のコスト</strong></p>
+<ul>
+<li>EVT：U×U=100／左U右R=120／左R右U=140／R×R=160（固定）</li>
+<li>Econ：左親分＋右親分。各親＝基本値（Uncommon 50、左Rare 90、右Rare 70）＋BC×20</li>
+<li>鯛焼き：U×U=Unc2枚／片Rare=Unc1+Rare1／R×R=Rare2枚</li>
+</ul>
+<p><strong>Rare固定抽選率</strong>：R×R=50%／左R×右U=20%／左U×右R=10%（外れはUncommon P2以上）</p>
+<p><strong>試行回数</strong></p>
+<ul>
+<li>期待値＝1÷確率</li>
+<li>下振れ＝「90%の人が当たるまでの回数」＝log(0.1)÷log(1−確率) を切り上げ</li>
+</ul>
+<p><strong>Inbreeding判定（子から見た世代で判定）</strong> 親そのものは子の1世代目、親の1G祖先は子の2世代目…と数えます。</p>
+<div class="tablewrap"><table><thead><tr><th>重複位置</th><th>判定</th><th>効果</th></tr></thead><tbody><tr><td>4G×4G</td><td>Stable</td><td>特殊個体なら上振れ抽選</td></tr><tr><td>3G×4G</td><td>Golden</td><td>特殊個体ならより強い上振れ抽選</td></tr><tr><td>3G×3G、2G×4G</td><td>Danger</td><td>Nicks・Genesis premium無効。特殊個体ならSpecial Risk</td></tr><tr><td>2G×2G、2G×3G、1G×どこでも</td><td>Forbidden</td><td>同上（最も危険）</td></tr></tbody></table></div>
+<p><strong>Nicks</strong>：左親の系統→右親の系統が「Z→L／L→V／V→N／N→Z」なら成立。左右4世代×4世代＝最大16候補から<strong>有効3つまで</strong>採用。</p>
+<hr>
+<h2>4. 注意事項</h2>
+<ul>
+<li>Golden/Special Riskの当選率、P-rank上振れ幅は<strong>公式非公開</strong>。ツールが保証できるのは「抽選を引く権利のコスト」までです。</li>
+<li>仕様はSeason 1時点のもの。公式のアップデートで数値が変わったら結果は当てになりません。</li>
+<li>タブ05の家系図は「全祖先」ではなく「注目個体だけ登録」する簡易方式です。登録漏れがあるとInbreeding判定も漏れます。</li>
+<li>登録データは保存されません（画面を閉じると消えます）。</li>
+<li>本ツールは収益・当選を保証しません。投資は自己責任で。</li>
+</ul>
+  <footer>
+    <a href="./index.html">← SyFu TOOLS トップへ</a><br>
+    非公式ファンメイド・シミュレータ集｜Not affiliated with SyFu / GINKAN / Unlock Lab.
+  </footer>
+</div>
+</body>
+</html>

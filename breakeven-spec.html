@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BREAK-EVEN 仕様書｜SyFu TOOLS</title>
+<link rel="icon" type="image/png" href="./assets/favicon.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+:root{--bg:#14101d;--panel:#1e1930;--panel2:#262040;--line:#3a3258;--ink:#ece5d8;--sub:#8d86a3;--gold:#e8b64c;--gold-soft:#f0d18a;--blue:#6f9fe0;--shu:#d05045;--green:#7fbf7a;--acc:var(--blue)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Zen Kaku Gothic New',sans-serif;line-height:1.75;
+  background-image:radial-gradient(ellipse 90% 40% at 50% -8%, rgba(232,182,76,.06), transparent)}
+.wrap{max-width:780px;margin:0 auto;padding:18px 18px 90px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 18px;border-bottom:1px solid var(--line);margin-bottom:22px;position:sticky;top:0;background:linear-gradient(180deg,var(--bg) 80%,transparent);z-index:5}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{height:26px;width:auto}
+.brand .pix{width:26px;height:26px;image-rendering:pixelated;display:none}
+.brand b{font-family:'DotGothic16',monospace;font-size:.82rem;letter-spacing:.05em;color:var(--sub)}
+.back{font-family:'DotGothic16',monospace;font-size:.72rem;color:var(--acc);text-decoration:none;border:1px solid var(--line);border-radius:20px;padding:6px 14px;white-space:nowrap;transition:border-color .15s}
+.back:hover{border-color:var(--acc)}
+.dochead{display:flex;align-items:center;gap:8px;font-family:'DotGothic16',monospace;font-size:.66rem;letter-spacing:.14em;color:var(--acc);margin-bottom:6px}
+.dochead::before{content:'';width:22px;height:2px;background:var(--acc)}
+h1{font-family:'DotGothic16',monospace;font-size:1.4rem;line-height:1.35;letter-spacing:.03em;margin:2px 0 4px;color:var(--ink)}
+h2{font-family:'DotGothic16',monospace;font-size:1.02rem;color:var(--gold-soft);margin:30px 0 10px;padding-top:18px;border-top:1px solid var(--line);letter-spacing:.03em}
+h3{font-size:.94rem;color:var(--acc);margin:20px 0 6px;font-weight:700}
+h4{font-size:.85rem;color:var(--sub);margin:14px 0 4px;font-weight:700}
+p{margin:9px 0;font-size:.9rem}
+ul,ol{margin:9px 0 9px 22px;font-size:.9rem}
+li{margin:4px 0}
+strong{color:var(--gold-soft);font-weight:700}
+code{font-family:'DotGothic16',monospace;font-size:.82rem;color:var(--gold);background:#0f0c18;padding:2px 7px;border-radius:5px;white-space:pre-wrap}
+hr{border:none;border-top:1px dashed var(--line);margin:20px 0}
+.tablewrap{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:420px}
+th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--panel2);color:var(--gold-soft);font-weight:700;font-size:.76rem;white-space:nowrap}
+tr:hover td{background:rgba(255,255,255,.02)}
+td code{font-size:.76rem}
+.lead-first h1+p,.intro{color:var(--sub)}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);text-align:center;font-size:.74rem;color:var(--sub);line-height:1.9}
+footer a{color:var(--blue);text-decoration:none}
+@media (max-width:440px){h1{font-size:1.15rem}.wrap{padding:14px 14px 80px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="brand" href="./index.html">
+      <img src="./assets/logo_white.png" alt="SyFu" style="height:20px;width:auto">
+      <b>TOOLS</b>
+    </a>
+    <a class="back" href="./breakeven.html">← アプリを開く</a>
+  </div>
+  <div class="dochead">SPECIFICATION</div><h1>SyFu BREAK-EVEN 仕様書</h1>
+<p><strong>損益分岐点シミュレータ（breakeven.html）</strong> 初心者向け解説版｜2026年7月版</p>
+<hr>
+<h2>1. このツールは何をするもの？</h2>
+<p>SyFuで遊んで（＝お店でチェックインして決済データをBINDして）、<strong>本当に儲かるのか？いくらなら儲かるのか？</strong>を計算するツールです。</p>
+<p>「損益分岐点（Break-Even Point、BEP）」とは、<strong>利益がちょうどゼロになる境目</strong>のこと。たとえば「EVT価格が$0.08を超えていれば黒字、下回れば赤字」という境目の価格を自動計算します。</p>
+<p>ブラウザで開くだけで動きます（スマホ対応）。HTMLファイルを<strong>ダウンロードしてブラウザで直接開くと、EVT価格の自動取得ボタンも動きます</strong>。</p>
+<h3>SyFuで収益が生まれる仕組み（前提知識）</h3>
+<p>SyFuの収入源は大きく2つです。</p>
+<ol>
+<li><strong>採掘</strong>：お店でチェックイン→決済→BIND（紐付け）すると、決済額に応じてEVT（換金できるトークン）がもらえる</li>
+<li><strong>ブリード</strong>：NFT2体を掛け合わせて子NFTを作り、マーケットで売る</li>
+</ol>
+<p>一方で、遊ぶと必ずコストがかかります。</p>
+<ul>
+<li><strong>寿命</strong>：EVTを稼ぐとNFTの寿命が減る。回復にはCommon NFT（<strong>常に$50で運営が販売</strong>）が必要。Common1体で33%回復するので、<strong>寿命1%の回復＝約$1.52</strong>という「ドル建ての固定費」になります。ここがSyFu経済の最重要ポイントです。</li>
+<li><strong>HP</strong>：チェックインごとに3%減。Econ（ゲーム内通貨）で回復</li>
+<li><strong>手数料</strong>：EVTの出金1回につき1 EVT（最低20 EVTから）、NFT売却時ロイヤリティ8%</li>
+<li><strong>SyFu Pass</strong>：$4/月の任意サブスク（EVT獲得+10%）</li>
+</ul>
+<p>つまり、<strong>収入はEVT価格しだいで増減するのに、コストはドル建てでほぼ固定</strong>。だから「EVT価格がいくら以上なら黒字か」という損益分岐点が計算できるのです。</p>
+<hr>
+<h2>2. 画面構成</h2>
+<h3>共通：市場パラメータ（最初に入力する欄）</h3>
+<div class="tablewrap"><table><thead><tr><th>入力項目</th><th>意味</th><th>どこで調べる？</th></tr></thead><tbody><tr><td>EVT価格（$）</td><td>トークンの現在価格</td><td>「⟳自動取得」ボタン、またはDexScreener</td></tr><tr><td>Uncフロア（$）</td><td>Uncommon NFTの最安売値</td><td>ゲーム内マーケット</td></tr><tr><td>Rareフロア（$）</td><td>Rare NFTの最安売値</td><td>同上</td></tr><tr><td>Econ単価（$/Econ）</td><td>Econを1手に入れるのにかかる実費</td><td>自分の購入実績から</td></tr><tr><td>Unc鯛焼き／Rare鯛焼き（$）</td><td>鯛焼き1枚の調達コスト</td><td>同上</td></tr><tr><td>表示通貨</td><td>USD／JPY（円）切替。<strong>入力はドル、表示だけ円に変換</strong></td><td>—</td></tr><tr><td>USD/JPY</td><td>円換算レート</td><td>為替サイト</td></tr><tr><td>フロア連動係数 β</td><td>EVT価格が動いたときフロアがどれだけつられて動くか（後述）</td><td>自分の相場観</td></tr></tbody></table></div>
+<p><strong>βとは？</strong> 現実には「EVTが半額になったらNFTのフロアも下がる」ことが多いです。β=0なら「フロアは動かない」、β=1なら「EVTと同じ率で動く」、β=0.7なら「EVTが−50%のときフロアは約−38%」という想定になります。タブ3のグラフとシナリオ表に反映されます。</p>
+<p><strong>初期値はすべてダミーです。必ず実勢の数字に置き換えてから判断してください。</strong></p>
+<h3>タブ01：採掘損益（BIND）</h3>
+<p><strong>「毎日お店でチェックインして稼ぐ活動は黒字か？」を月次で計算します。</strong></p>
+<ul>
+<li>入力：1日の平均EVT獲得枚数（※獲得レートは公式非公開なので、自分の実績から入力）、稼働日数、寿命消費%（EVT100枚あたり・実測）、Durability軽減、月間Econ消費、出金回数、Pass加入</li>
+<li>出力：月間EVT獲得・収入・寿命消費％・寿命コスト・その他コスト・<strong>1EVTあたりの採掘原価</strong>・月次損益</li>
+</ul>
+<p>一番大事な出力は金枠の<strong>「損益分岐EVT価格」</strong>。現在のEVT価格がこれより上なら黒字、下なら赤字です。寿命コストがドル固定（$50のCommonにペッグ）なので、この分岐価格はEVT相場が動いても変わらない、というのがSyFuの構造です。</p>
+<p>計算式（ざっくり）： ``<code> 収入      ＝ 月間EVT × EVT価格 ×（Pass加入なら1.10） 寿命コスト＝ 月間EVT × 寿命係数 ×（1−Durability）× $1.52 損益      ＝ 収入 − 寿命コスト − Econコスト − Pass$4 − 出金手数料 分岐価格  ＝（寿命コスト＋Econ＋Pass）÷（月間EVT − 出金手数料分のEVT） </code>``</p>
+<h3>タブ02：ブリード損益</h3>
+<p><strong>「子NFTを1体作って売ったら儲かるか？」を計算します。</strong></p>
+<p>上段（Uncommon量産・U×U）：</p>
+<ul>
+<li>子1体コスト＝100 EVT＋Econ（初回100／ペア5回平均180から選択）＋Unc鯛焼き2枚</li>
+<li>収入＝フロア×0.92（ロイヤリティ8%を引いた手取り）</li>
+<li>金枠に<strong>「損益分岐フロア」</strong>＝これ未満のフロアでは作るほど赤字、という境目の価格</li>
+</ul>
+<p>出口として「Naturalization（自然化）」も選べますが、これは<strong>100 EVT払って85 EVTしか返らない仕組み</strong>（途中で計15 EVTがバーンされる）なので、単体では必ず赤字。「売れ残りの最低保証」と理解してください。</p>
+<p>下段（Rare獲得・R×R 50%）：</p>
+<ul>
+<li>上振れ（1回）／期待値（2回）／下振れ（4回）の3行で、総コスト・外れ子の売却回収・純コスト・現在のRareフロアでの損益を表示</li>
+<li>金枠に<strong>「損益分岐Rareフロア」</strong>（期待値ベース）</li>
+</ul>
+<h3>タブ03：月次総合・回収</h3>
+<p><strong>採掘＋ブリードを合算した「事業全体」の月次収支と、初期投資の回収期間を出します。</strong></p>
+<ul>
+<li>入力：初期投資（NFT購入費の合計）、月間ブリード子体数</li>
+<li>出力：採掘損益／ブリード損益／合計（月次）、<strong>投資回収期間（〜ヶ月）</strong>、総合の損益分岐EVT価格</li>
+</ul>
+<p>グラフは「EVT価格が動いたら月次損益がどうなるか」の曲線です。βを設定していると、フロアもEVT価格につられて動く想定でカーブが曲がります（分岐点はコンピュータが数値的に探索）。</p>
+<p><strong>シナリオ表</strong>：EVT価格が−50%／−25%／現在／+50%／+100%になった場合の、連動後フロア・採掘損益・ブリード損益・合計・回収期間を一覧表示。<strong>「−50%の行が赤字かどうか」がリスク管理の目安</strong>です。</p>
+<p>覚えておくと便利な構造：</p>
+<ul>
+<li>ブリードは1体につき100 EVTを「支払う」側なので、ブリードを増やすほどEVT価格への依存が減り、<strong>フロア価格への依存が増えます</strong></li>
+<li>採掘はその逆で、純粋にEVT価格に依存します</li>
+<li>両方やると、EVTの入り（採掘）と出（ブリード）が一部相殺されます</li>
+</ul>
+<h3>「⟳ EVT価格を自動取得」ボタン</h3>
+<p>DexScreener（価格サイト）のAPIから公式EVTの現在価格を取ってきて入力欄に反映します。 <strong>注意</strong>：Claudeのプレビュー画面内では外部通信がブロックされるため動きません。その場合はリンクから手動確認してください。<strong>ファイルをダウンロードしてブラウザ（Chrome/Safari等）で開けば動作します。</strong></p>
+<hr>
+<h2>3. 収益が成立する3条件（このツールの結論）</h2>
+<ol>
+<li><strong>採掘黒字の条件</strong>：EVT価格 ＞ 1EVTあたり採掘原価（＝寿命係数×$1.52＋Econ等）</li>
+<li><strong>ブリード黒字の条件</strong>：Uncフロア×0.92 ＞ 子1体コスト（100 EVT＋Econ＋鯛焼き2）</li>
+<li><strong>事業として成立する条件</strong>：上記合算の月次CFがプラスで、初期投資÷月次CF（回収期間）が自分の許容内</li>
+</ol>
+<hr>
+<h2>4. 計算根拠（公式GitBookで確認済みの数値）</h2>
+<div class="tablewrap"><table><thead><tr><th>項目</th><th>値</th></tr></thead><tbody><tr><td>Common NFT価格</td><td>$50固定（運営が常時販売）</td></tr><tr><td>寿命回復</td><td>Common1体＝33%回復 →寿命1%≒$1.52のドルペッグ</td></tr><tr><td>HP消費</td><td>チェックインごと3%（Durabilityで軽減）</td></tr><tr><td>ロイヤリティ</td><td>二次販売の8%（売り手負担）</td></tr><tr><td>EVT出金手数料</td><td>1回1 EVT固定（最低出金20 EVT）</td></tr><tr><td>SyFu Pass</td><td>$4/月、EVT獲得+10%</td></tr><tr><td>ブリードEVT</td><td>100／120／140／160（組み合わせ別）</td></tr><tr><td>Naturalization</td><td>100 EVT基準→バーン後85 EVT返却</td></tr></tbody></table></div>
+<h2>5. 注意事項</h2>
+<ul>
+<li><strong>非公開パラメータ</strong>：EVT獲得レート（X/Y/Z%）と寿命消費係数は公式非公開。アプリ内の自分の実測値を入力する前提です。</li>
+<li>フロアとEVT価格の連動（β）はあくまで仮定モデル。暴落時は流動性が消えて「フロアはあるのに売れない」事態も起こります。</li>
+<li>Trust Rankが下がると出金待機や報酬条件が悪化しますが、本ツールでは考慮外です。</li>
+<li>入力データは保存されません。</li>
+<li>本ツールは収益を保証しません。Web3ゲームは原資を失うリスクがあります。余剰資金で。</li>
+</ul>
+  <footer>
+    <a href="./index.html">← SyFu TOOLS トップへ</a><br>
+    非公式ファンメイド・シミュレータ集｜Not affiliated with SyFu / GINKAN / Unlock Lab.
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SyFu TOOLS｜MANEKINEKO ブリード＆損益分岐点シミュレータ</title>
+<link rel="icon" type="image/png" href="./assets/favicon.png">
+<meta name="description" content="SyFu Season 1のブリード（繁殖）コスト・確率計算と、採掘/ブリードの損益分岐点をシミュレーションする非公式ツール集。">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+:root{
+  --bg:#14101d;--panel:#1e1930;--panel2:#262040;--line:#3a3258;
+  --ink:#ece5d8;--sub:#8d86a3;--gold:#e8b64c;--gold-soft:#f0d18a;
+  --blue:#6f9fe0;--tai:#c98d5e;--shu:#d05045;--green:#7fbf7a;--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Zen Kaku Gothic New',sans-serif;line-height:1.65;min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 90% 45% at 50% -8%, rgba(232,182,76,.10), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(111,159,224,.06), transparent),
+    repeating-linear-gradient(0deg, transparent 0 47px, rgba(255,255,255,.014) 47px 48px);}
+.wrap{max-width:720px;margin:0 auto;padding:22px 16px 80px}
+.gold{color:var(--gold)}.blue{color:var(--blue)}.sub{color:var(--sub)}
+
+/* hero */
+.hero{text-align:center;padding:26px 10px 20px}
+.logo{height:52px;width:auto;margin-bottom:16px;filter:drop-shadow(0 4px 16px rgba(232,182,76,.25))}
+.neko{width:80px;height:80px;image-rendering:pixelated;margin-bottom:14px;filter:drop-shadow(0 4px 16px rgba(232,182,76,.3))}
+h1{font-family:'DotGothic16',monospace;font-size:1.55rem;letter-spacing:.06em;line-height:1.3}
+h1 .sf{color:var(--gold)}
+.lead{font-size:.82rem;color:var(--sub);letter-spacing:.16em;margin-top:8px}
+.tagline{font-size:.9rem;color:var(--ink);margin-top:16px;max-width:520px;margin-left:auto;margin-right:auto}
+.badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.badge{font-family:'DotGothic16',monospace;font-size:.62rem;color:var(--sub);border:1px solid var(--line);
+  border-radius:20px;padding:4px 12px;letter-spacing:.05em}
+.badge.g{color:var(--gold);border-color:var(--gold)}
+
+/* section label */
+.seclabel{font-family:'DotGothic16',monospace;font-size:.72rem;color:var(--gold-soft);letter-spacing:.14em;
+  margin:30px 4px 12px;display:flex;align-items:center;gap:10px}
+.seclabel::before,.seclabel::after{content:'';height:1px;background:var(--line);flex:1}
+
+/* app cards */
+.card{display:block;text-decoration:none;color:inherit;background:linear-gradient(180deg,var(--panel),#1a1528);
+  border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:16px;position:relative;overflow:hidden;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.card::before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:var(--gold)}
+.card.b2::before{background:var(--blue)}
+.card:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.card.b2:hover{border-color:var(--blue);box-shadow:0 10px 30px rgba(111,159,224,.15)}
+.card:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.chead{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.icon{width:46px;height:46px;flex:none;border-radius:12px;background:var(--panel2);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center}
+.icon svg{width:28px;height:28px}
+.ctitle{font-family:'DotGothic16',monospace;font-size:1.12rem;letter-spacing:.03em}
+.ctitle .no{font-size:.7rem;color:var(--sub);display:block;letter-spacing:.14em}
+.cdesc{font-size:.84rem;color:var(--sub);line-height:1.6}
+.feat{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+.tag{font-size:.64rem;padding:3px 9px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);color:var(--sub)}
+.tag.g{color:var(--gold);border-color:rgba(232,182,76,.4)}
+.tag.b{color:var(--blue);border-color:rgba(111,159,224,.4)}
+.cta{display:inline-flex;align-items:center;gap:6px;font-family:'DotGothic16',monospace;font-size:.8rem;
+  color:var(--gold);margin-top:12px}
+.card.b2 .cta{color:var(--blue)}
+.cta .arw{transition:transform .18s}
+.card:hover .cta .arw{transform:translateX(4px)}
+
+/* doc links */
+.docgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.doc{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);background:var(--panel);
+  border:1px solid var(--line);border-radius:10px;padding:13px 14px;font-size:.82rem;transition:border-color .15s,background .15s}
+.doc:hover{border-color:var(--gold-soft);background:var(--panel2)}
+.doc svg{width:20px;height:20px;flex:none;color:var(--sub)}
+.doc b{font-weight:700}.doc span{display:block;font-size:.66rem;color:var(--sub)}
+
+/* how / note */
+.info{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-top:8px}
+.info h3{font-family:'DotGothic16',monospace;font-size:.82rem;color:var(--gold-soft);margin-bottom:10px;letter-spacing:.04em}
+.info ol{margin:0 0 0 20px;font-size:.8rem;color:var(--sub)}
+.info ol li{margin-bottom:6px}
+.info code{font-family:'DotGothic16',monospace;font-size:.76rem;color:var(--gold);background:#0f0c18;padding:2px 6px;border-radius:5px}
+.disc{border-left:3px solid var(--shu);padding-left:12px;margin-top:14px;font-size:.75rem;color:var(--sub);line-height:1.6}
+.disc b{color:var(--ink)}
+
+footer{text-align:center;margin-top:34px;font-size:.72rem;color:var(--sub);line-height:1.8}
+footer a{color:var(--blue);text-decoration:none}
+footer a:hover{text-decoration:underline}
+.gh{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:20px;
+  padding:7px 16px;color:var(--ink);text-decoration:none;font-size:.76rem;margin-top:10px;transition:border-color .15s}
+.gh:hover{border-color:var(--gold)}
+.gh svg{width:16px;height:16px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:440px){h1{font-size:1.25rem}.docgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <img class="logo" src="./assets/logo_grad.png" alt="SyFu">
+    <h1>MANEKINEKO <span class="sf">TOOLS</span></h1>
+    <div class="lead">SyFu 非公式シミュレータ集</div>
+    <p class="tagline">SyFu Season 1 の<span class="gold">ブリード（繁殖）</span>コスト・確率計算と、採掘／ブリードの<span class="blue">損益分岐点</span>を、始める前に机上で検証するためのツール群です。</p>
+    <div class="badges">
+      <span class="badge g">GitBook仕様準拠</span>
+      <span class="badge">インストール不要</span>
+      <span class="badge">スマホ対応</span>
+      <span class="badge">非公式ファンメイド</span>
+    </div>
+  </div>
+
+  <div class="seclabel">TOOLS</div>
+
+  <a class="card" href="./breed.html">
+    <div class="chead">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#e8b64c" stroke-width="1.6">
+        <circle cx="7" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><path d="M7 10v3M17 10v3M7 13h10M12 13v4"/><circle cx="12" cy="19" r="2.4"/></svg></div>
+      <div class="ctitle"><span class="no">TOOL 01</span>BREED SIM</div>
+    </div>
+    <p class="cdesc">2体の招き猫を掛け合わせたときのEVT／Econ／鯛焼き消費とRare抽選率を計算。上振れ・期待値・下振れの3段階で「Rareが出るまでの総コスト」を試算し、手持ちNFTを登録すれば目的別（Rare／高P-rank／Inbreeding／Elite）に最適ペアをレコメンドします。</p>
+    <div class="feat">
+      <span class="tag g">コスト計算</span><span class="tag g">Rare確率3段階</span>
+      <span class="tag">実践ガチャ</span><span class="tag">1体目Golden設計</span><span class="tag">手持ち最適化</span>
+    </div>
+    <span class="cta">シミュレータを開く <span class="arw">→</span></span>
+  </a>
+
+  <a class="card b2" href="./breakeven.html">
+    <div class="chead">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#6f9fe0" stroke-width="1.6">
+        <path d="M4 19V5M4 19h16M4 15l5-5 3 3 6-7"/><circle cx="19" cy="6" r="1.4" fill="#6f9fe0"/></svg></div>
+      <div class="ctitle"><span class="no">TOOL 02</span>BREAK-EVEN</div>
+    </div>
+    <p class="cdesc">「EVT価格がいくら以上なら黒字か」を採掘・ブリード・月次総合の3面から算出。寿命回復のドル固定費（Common $50ペッグ）を軸に損益分岐点を求め、円建て表示・フロア連動係数β・EVT価格の自動取得に対応しています。</p>
+    <div class="feat">
+      <span class="tag b">損益分岐EVT価格</span><span class="tag b">投資回収期間</span>
+      <span class="tag">円建て表示</span><span class="tag">価格変動シナリオ</span><span class="tag">DexScreener連携</span>
+    </div>
+    <span class="cta">シミュレータを開く <span class="arw">→</span></span>
+  </a>
+
+  <div class="seclabel">DOCUMENTS</div>
+  <div class="docgrid">
+    <a class="doc" href="./breed-spec.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg>
+      <div><b>BREED 仕様書</b><span>初心者向け解説（HTML）</span></div>
+    </a>
+    <a class="doc" href="./breakeven-spec.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg>
+      <div><b>BREAK-EVEN 仕様書</b><span>初心者向け解説（HTML）</span></div>
+    </a>
+  </div>
+
+  <div class="seclabel">HOW TO USE</div>
+  <div class="info">
+    <h3>使い方</h3>
+    <ol>
+      <li>上のツールカードをタップして開くだけ。ダウンロード・ログイン不要です。</li>
+      <li>数値の初期値は<b>ダミー</b>です。EVT価格・NFTフロア・鯛焼き価格など、実勢の数字に置き換えてから判断してください。</li>
+      <li>BREAK-EVENの「EVT価格自動取得」は、<b>ファイルをブラウザで直接開いた場合</b>のみ動作します（埋め込みプレビュー内では外部通信が制限され動きません）。</li>
+      <li>入力データは保存されません。ページを閉じると消えます。</li>
+    </ol>
+  </div>
+
+  <div class="info" style="margin-top:14px">
+    <h3>数値の根拠</h3>
+    <p class="cdesc">計算式・確率・コストはすべて SyFu 公式 GitBook（<code>docs.syfu.io</code>）Season 1 の記載値に基づいています。当選率が非公開の項目（Good Inbreeding・Special Risk のRare率、EVT獲得レート、寿命係数）は、ユーザーの実測値を入力する設計です。仕様アップデートで数値が変わった場合は結果が当てになりません。</p>
+    <p class="disc"><b>免責</b>：本サイトは有志による<b>非公式ファンメイド</b>ツールで、SyFu運営（GINKAN / Unlock Lab）とは無関係です。収益・当選・資産価値を一切保証しません。Web3ゲームは元本を失うリスクがあります。投資判断は自己責任で、余剰資金の範囲で行ってください。</p>
+  </div>
+
+  <footer>
+    <a class="gh" href="#" id="ghlink">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+      GitHub リポジトリ
+    </a>
+    <div style="margin-top:14px">SyFu TOOLS｜非公式ファンメイド・シミュレータ集<br>Not affiliated with SyFu / GINKAN / Unlock Lab.</div>
+  </footer>
+
+</div>
+
+<script>
+// GitHub Pagesではユーザー名/リポジトリ名が入るので、公開URLから自動でリポジトリのトップへ誘導
+(function(){
+  var a=document.getElementById('ghlink');
+  var h=location.hostname, path=location.pathname;
+  if(h.endsWith('github.io')){
+    var user=h.split('.')[0];
+    var repo=path.split('/').filter(Boolean)[0];
+    a.href = repo ? ('https://github.com/'+user+'/'+repo) : ('https://github.com/'+user);
+  }else{
+    a.href='https://github.com/';   // ローカルプレビュー時のフォールバック
+  }
+})();
+</script>
+</body>
+</html>

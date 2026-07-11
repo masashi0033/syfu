@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MANEKINEKO BREED SIM｜SyFu ブリード収支シミュレータ</title>
+<link rel="icon" type="image/png" href="./assets/favicon.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+
+:root{
+  --bg:#14101d;          /* 漆黒×藍 */
+  --panel:#1e1930;
+  --panel2:#262040;
+  --line:#3a3258;
+  --ink:#ece5d8;         /* 和紙 */
+  --sub:#8d86a3;
+  --gold:#e8b64c;        /* 金まり = EVT/Rare */
+  --gold-soft:#f0d18a;
+  --blue:#6f9fe0;        /* 青まり = Econ */
+  --tai:#c98d5e;         /* たいやき */
+  --shu:#d05045;         /* 朱 = 警告/Forbidden */
+  --green:#7fbf7a;
+  --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Zen Kaku Gothic New',sans-serif;
+  line-height:1.6;
+  min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 80% 40% at 50% -5%, rgba(232,182,76,.07), transparent),
+    repeating-linear-gradient(0deg, transparent 0 47px, rgba(255,255,255,.015) 47px 48px);
+}
+.wrap{max-width:760px;margin:0 auto;padding:16px 14px 80px}
+
+/* ── header ── */
+header{display:flex;align-items:center;gap:12px;padding:10px 2px 18px}
+.neko{width:44px;height:44px;flex:none;image-rendering:pixelated}
+h1{
+  font-family:'DotGothic16',monospace;
+  font-size:1.15rem;letter-spacing:.06em;line-height:1.25;
+}
+h1 small{display:block;font-size:.62rem;color:var(--sub);letter-spacing:.18em;margin-top:2px}
+.gold{color:var(--gold)}
+
+/* ── tabs ── */
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:16px}
+.tab{
+  font-family:'DotGothic16',monospace;
+  font-size:.66rem;letter-spacing:.01em;
+  background:var(--panel);border:1px solid var(--line);color:var(--sub);
+  border-radius:10px;padding:10px 4px;text-align:center;cursor:pointer;
+  transition:all .15s;
+}
+.tab .tno{display:block;font-size:.6rem;opacity:.55;margin-bottom:2px}
+.tab.on{background:linear-gradient(180deg,#2e2748,#262040);color:var(--gold);border-color:var(--gold)}
+.tab:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* ── panels ── */
+.pane{display:none;animation:fade .25s ease}
+.pane.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.card h2{font-family:'DotGothic16',monospace;font-size:.92rem;color:var(--gold-soft);margin-bottom:12px;letter-spacing:.04em}
+.card h3{font-size:.82rem;color:var(--sub);margin:14px 0 6px;font-weight:700}
+.note{font-size:.74rem;color:var(--sub);line-height:1.55}
+.note b{color:var(--ink)}
+.warn{border-left:3px solid var(--shu);padding-left:10px;margin-top:10px}
+
+/* ── controls ── */
+label.fl{display:block;font-size:.74rem;color:var(--sub);margin:10px 0 4px;font-weight:500}
+select,input[type=number]{
+  width:100%;background:var(--panel2);color:var(--ink);
+  border:1px solid var(--line);border-radius:8px;padding:11px 12px;
+  font-size:.95rem;font-family:inherit;
+}
+select:focus,input:focus{outline:2px solid var(--gold);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chk{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:.85rem;cursor:pointer}
+.chk input{width:20px;height:20px;accent-color:var(--gold)}
+.btn{
+  font-family:'DotGothic16',monospace;
+  width:100%;padding:15px;border-radius:12px;border:1px solid var(--gold);
+  background:linear-gradient(180deg,#3a2f18,#2b2312);color:var(--gold);
+  font-size:1rem;letter-spacing:.08em;cursor:pointer;margin-top:14px;
+  transition:transform .08s;
+}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:var(--panel2);border-color:var(--line);color:var(--sub);font-size:.8rem;padding:11px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── stat display ── */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
+.stat .k{font-size:.62rem;color:var(--sub);letter-spacing:.06em}
+.stat .v{font-family:'DotGothic16',monospace;font-size:1.25rem;margin-top:2px}
+.stat.evt .v{color:var(--gold)}
+.stat.econ .v{color:var(--blue)}
+.stat.tai .v{color:var(--tai)}
+.stat .u{font-size:.6rem;color:var(--sub)}
+.ratebar{margin-top:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px}
+.ratebar .lbl{display:flex;justify-content:space-between;font-size:.74rem;color:var(--sub)}
+.ratebar .lbl b{color:var(--gold);font-family:'DotGothic16',monospace;font-size:1rem}
+.bar{height:10px;background:#0f0c18;border-radius:6px;margin-top:6px;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,#8a6420,var(--gold));border-radius:6px;transition:width .4s ease}
+
+/* ── tables ── */
+table{width:100%;border-collapse:collapse;font-size:.78rem;margin-top:10px}
+th,td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th{color:var(--sub);font-weight:500;font-size:.68rem;letter-spacing:.04em}
+td:first-child,th:first-child{text-align:left}
+td.evt{color:var(--gold)}td.econ{color:var(--blue)}td.tai{color:var(--tai)}
+tr.hl td{background:rgba(232,182,76,.07)}
+.scen{font-family:'DotGothic16',monospace;font-size:.8rem}
+.scen.up{color:var(--green)}.scen.ex{color:var(--gold)}.scen.dn{color:var(--shu)}
+
+/* ── SVG chart ── */
+.chart{margin-top:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 6px 4px}
+.chart svg{width:100%;height:auto;display:block}
+
+/* ── gacha ── */
+.mari{
+  width:120px;height:120px;margin:18px auto 6px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #fff, #cfc9bd 60%, #a49d8f);
+  box-shadow:0 6px 24px rgba(0,0,0,.5), inset 0 -8px 16px rgba(0,0,0,.15);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DotGothic16',monospace;font-size:.8rem;color:#5a5340;
+  transition:all .3s;position:relative;
+}
+.mari.gold{
+  background:radial-gradient(circle at 35% 30%, #ffe9ae, var(--gold) 55%, #9c7020);
+  box-shadow:0 6px 30px rgba(232,182,76,.55), inset 0 -8px 16px rgba(0,0,0,.2);
+  color:#4a3608;
+}
+.mari.roll{animation:shake .5s ease}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-7px) rotate(-6deg)}50%{transform:translateX(7px) rotate(6deg)}75%{transform:translateX(-4px) rotate(-3deg)}}
+.result{
+  text-align:center;font-family:'DotGothic16',monospace;font-size:1.05rem;
+  min-height:1.8em;margin-bottom:6px;letter-spacing:.05em;
+}
+.result.rare{color:var(--gold);text-shadow:0 0 14px rgba(232,182,76,.6)}
+.result.unc{color:var(--sub)}
+.pairinfo{display:flex;justify-content:center;gap:14px;font-size:.72rem;color:var(--sub);margin-bottom:4px}
+.pairinfo b{color:var(--ink)}
+.log{max-height:150px;overflow-y:auto;font-size:.72rem;margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+.log div{padding:2px 0;color:var(--sub)}
+.log .r{color:var(--gold)}
+
+/* ── pedigree tree ── */
+.tree{overflow-x:auto;margin-top:8px}
+.tree svg{min-width:520px;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:.68rem;color:var(--sub);margin-top:8px}
+.legend span{display:flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+/* ── NFT roster & recommendations ── */
+.nft{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px;position:relative}
+.nft .del{position:absolute;top:8px;right:8px;background:none;border:1px solid var(--line);color:var(--sub);border-radius:6px;font-size:.66rem;padding:3px 8px;cursor:pointer}
+.nft input[type=text]{width:60%;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.9rem;font-family:inherit}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.grid3 label,.grid4 label,.ancrow label{display:block;font-size:.62rem;color:var(--sub);margin-bottom:2px}
+.nft select{padding:8px 6px;font-size:.82rem}
+.ancrow{display:grid;grid-template-columns:1.4fr .8fr 1fr auto;gap:6px;margin-top:6px;align-items:end}
+.ancrow input[type=text]{width:100%}
+.ancrow button{background:none;border:1px solid var(--line);color:var(--sub);border-radius:6px;padding:8px;cursor:pointer;font-size:.7rem}
+.mini{font-size:.68rem;color:var(--sub);background:none;border:1px dashed var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;margin-top:8px;width:100%}
+.rec{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px}
+.rec.top{border-color:var(--gold);box-shadow:0 0 14px rgba(232,182,76,.12)}
+.rec h4{font-family:'DotGothic16',monospace;font-size:.88rem;letter-spacing:.03em}
+.rec .rank{color:var(--gold);margin-right:6px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 6px}
+.chip{font-size:.62rem;padding:3px 8px;border-radius:20px;border:1px solid var(--line);color:var(--sub)}
+.chip.g{border-color:var(--gold);color:var(--gold)}
+.chip.b{border-color:var(--blue);color:var(--blue)}
+.chip.r{border-color:var(--shu);color:var(--shu)}
+.chip.gr{border-color:var(--green);color:var(--green)}
+.rec .cost{font-size:.74rem;color:var(--sub);font-variant-numeric:tabular-nums}
+.rec .cost b{color:var(--ink)}
+.rec .why{font-size:.72rem;color:var(--sub);margin-top:6px;line-height:1.5;border-top:1px solid var(--line);padding-top:6px}
+.empty{text-align:center;color:var(--sub);font-size:.8rem;padding:20px 0}
+
+
+@media (max-width:420px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .tab{font-size:.64rem}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 2px 14px;margin-bottom:4px;border-bottom:1px solid var(--line)">
+  <a href="./index.html" style="display:flex;align-items:center;gap:9px;text-decoration:none">
+    <img src="./assets/logo_white.png" alt="SyFu" style="height:20px;width:auto">
+    <span style="font-family:'DotGothic16',monospace;color:var(--sub);font-size:.72rem;letter-spacing:.05em">TOOLS</span>
+  </a>
+  <a href="./index.html" style="font-family:'DotGothic16',monospace;font-size:.68rem;color:var(--sub);text-decoration:none;border:1px solid var(--line);border-radius:20px;padding:5px 12px">← 一覧</a>
+</div>
+
+<header>
+  <svg class="neko" viewBox="0 0 16 16" aria-hidden="true">
+    <!-- pixel maneki-neko -->
+    <g fill="#e8b64c">
+      <rect x="3" y="2" width="2" height="2"/><rect x="11" y="2" width="2" height="2"/>
+      <rect x="3" y="4" width="10" height="5"/>
+      <rect x="4" y="9" width="8" height="5"/>
+      <rect x="13" y="6" width="2" height="4"/><rect x="12" y="5" width="2" height="2"/>
+    </g>
+    <g fill="#14101d">
+      <rect x="5" y="5" width="2" height="2"/><rect x="9" y="5" width="2" height="2"/>
+      <rect x="7" y="7" width="2" height="1"/>
+    </g>
+    <rect x="6" y="10" width="4" height="2" fill="#d05045"/>
+    <rect x="7" y="10" width="2" height="2" fill="#f0d18a"/>
+  </svg>
+  <h1>MANEKINEKO <span class="gold">BREED</span> SIM
+    <small>SyFu Season 1｜ブリード収支シミュレータ</small>
+  </h1>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab on" data-p="p1" role="tab"><span class="tno">01</span>コスト<br>計算</button>
+  <button class="tab" data-p="p2" role="tab"><span class="tno">02</span>Rare獲得<br>試算</button>
+  <button class="tab" data-p="p3" role="tab"><span class="tno">03</span>実践<br>ガチャ</button>
+  <button class="tab" data-p="p4" role="tab"><span class="tno">04</span>1体目<br>Golden</button>
+  <button class="tab" data-p="p5" role="tab"><span class="tno">05</span>手持ち<br>最適化</button>
+</nav>
+
+<!-- ═══ TAB 1: コスト計算 ═══ -->
+<section class="pane on" id="p1">
+  <div class="card">
+    <h2>▸ 1回あたりのブリードコスト</h2>
+    <label class="fl">組み合わせ</label>
+    <select id="c1combo">
+      <option value="uu">Uncommon × Uncommon</option>
+      <option value="ur">左Uncommon × 右Rare</option>
+      <option value="ru">左Rare × 右Uncommon</option>
+      <option value="rr">Rare × Rare</option>
+    </select>
+    <div class="row">
+      <div>
+        <label class="fl">左親 Breed Count</label>
+        <select id="c1bcl"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select>
+      </div>
+      <div>
+        <label class="fl">右親 Breed Count</label>
+        <select id="c1bcr"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select>
+      </div>
+    </div>
+    <label class="chk" id="c1whiteWrap">
+      <input type="checkbox" id="c1white">
+      <span>White TAIYAKI を使用（Elite抽選 50%／U×Uのみ）</span>
+    </label>
+
+    <div class="stats">
+      <div class="stat evt"><div class="k">EVT</div><div class="v" id="c1evt">100</div></div>
+      <div class="stat econ"><div class="k">Econ</div><div class="v" id="c1econ">100</div></div>
+      <div class="stat tai"><div class="k">TAIYAKI</div><div class="v" id="c1tai" style="font-size:.82rem;line-height:1.3;padding-top:6px">Unc×2</div></div>
+    </div>
+
+    <div class="ratebar">
+      <div class="lbl"><span>Rare P0 固定抽選率</span><b id="c1rate">—</b></div>
+      <div class="bar"><i id="c1ratebar" style="width:0%"></i></div>
+      <div class="lbl" style="margin-top:8px"><span>Elite抽選（White TAIYAKI）</span><b id="c1elite">—</b></div>
+    </div>
+
+    <p class="note" style="margin-top:12px" id="c1note"></p>
+    <p class="note warn">親の条件：Prime／寿命40%以上／HP100%／BC5未満／ゲーム内保有・未出品・Cooldown外。成功時は両親BC+1＆24h Cooldown。</p>
+  </div>
+</section>
+
+<!-- ═══ TAB 2: Rare獲得試算 ═══ -->
+<section class="pane" id="p2">
+  <div class="card">
+    <h2>▸ Rare獲得までの累計コスト（3段階）</h2>
+    <label class="fl">組み合わせ（Rare親を保有している前提）</label>
+    <select id="c2combo">
+      <option value="rr">Rare × Rare（50%）</option>
+      <option value="ru">左Rare × 右Uncommon（20%）</option>
+      <option value="ur">左Uncommon × 右Rare（10%）</option>
+    </select>
+    <p class="note" style="margin-top:8px">前提：新品ペア（BC0）から開始。1ペア最大5回で新ペアに交代（Econは各ペアBC0にリセット）。下振れ＝90パーセンタイル（90%の人がここまでに当選）。</p>
+
+    <div id="c2table"></div>
+
+    <div class="chart">
+      <div class="lbl" style="font-size:.7rem;color:var(--sub);padding:0 6px 4px">累積当選確率 P(n) = 1−(1−p)ⁿ</div>
+      <div id="c2chart"></div>
+    </div>
+    <p class="note" style="margin-top:10px" id="c2note"></p>
+  </div>
+</section>
+
+<!-- ═══ TAB 3: 実践ガチャ ═══ -->
+<section class="pane" id="p3">
+  <div class="card">
+    <h2>▸ 実践シミュレータ（乱数で1回ずつ実行）</h2>
+    <label class="fl">組み合わせ</label>
+    <select id="c3combo">
+      <option value="rr">Rare × Rare（50%）</option>
+      <option value="ru">左Rare × 右Uncommon（20%）</option>
+      <option value="ur">左Uncommon × 右Rare（10%）</option>
+    </select>
+
+    <div class="mari" id="mari">まり</div>
+    <div class="result" id="c3result">ブリード実行 を押す</div>
+    <div class="pairinfo">
+      <span>現ペアBC <b id="c3bc">0</b>/5</span>
+      <span>試行 <b id="c3n">0</b>回</span>
+      <span>使用ペア <b id="c3pairs">1</b>組</span>
+    </div>
+
+    <button class="btn" id="c3go">ブリード実行</button>
+    <button class="btn ghost" id="c3reset">リセット</button>
+
+    <div class="stats">
+      <div class="stat evt"><div class="k">EVT累計</div><div class="v" id="c3evt">0</div></div>
+      <div class="stat econ"><div class="k">Econ累計</div><div class="v" id="c3econ">0</div></div>
+      <div class="stat tai"><div class="k">TAIYAKI累計</div><div class="v" id="c3tai" style="font-size:.78rem;line-height:1.3;padding-top:8px">—</div></div>
+    </div>
+    <div class="stats" style="grid-template-columns:1fr 1fr">
+      <div class="stat"><div class="k">Rare獲得数</div><div class="v gold" id="c3rares">0</div></div>
+      <div class="stat"><div class="k">Rare親 拘束/消費</div><div class="v" id="c3consumed">0</div></div>
+    </div>
+    <div class="log" id="c3log"></div>
+  </div>
+</section>
+
+<!-- ═══ TAB 4: 1体目 Golden ═══ -->
+<section class="pane" id="p4">
+  <div class="card">
+    <h2>▸ 1体目のRare：Origin Goldenルート設計</h2>
+    <p class="note">Rare親ゼロの状態から、<b>Origin（Genesis血統個体）</b>を両親系図の<b>3G×4G＝Golden</b>に重ねてGood Inbreeding抽選（当選率<b>非公開</b>）を引くルート。系図構築とリソースを自動計算します。</p>
+
+    <label class="fl">引きたいGolden抽選回数</label>
+    <input type="number" id="c4draws" min="1" max="20" value="5" inputmode="numeric">
+    <label class="chk">
+      <input type="checkbox" id="c4white">
+      <span>最終交配にWhite TAIYAKIを併用（各回Elite 50%の同時抽選）</span>
+    </label>
+
+    <div class="stats">
+      <div class="stat"><div class="k">総ブリード数</div><div class="v" id="c4breeds">—</div></div>
+      <div class="stat evt"><div class="k">EVT累計</div><div class="v" id="c4evt">—</div></div>
+      <div class="stat econ"><div class="k">Econ累計</div><div class="v" id="c4econ">—</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat tai"><div class="k">TAIYAKI</div><div class="v" id="c4tai" style="font-size:.72rem;line-height:1.35;padding-top:6px">—</div></div>
+      <div class="stat"><div class="k">Prime育成体数</div><div class="v" id="c4raise">—</div></div>
+      <div class="stat"><div class="k">必要Origin</div><div class="v gold" id="c4origins">—</div></div>
+    </div>
+    <p class="note" id="c4slotnote" style="margin-top:10px"></p>
+
+    <h3>系図（1ペア分の構築）</h3>
+    <div class="tree" id="c4tree"></div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--gold)"></span>Origin</span>
+      <span><span class="dot" style="background:var(--blue)"></span>中間個体（要Prime育成）</span>
+      <span><span class="dot" style="background:var(--sub)"></span>購入Uncommon（要Prime育成）</span>
+      <span><span class="dot" style="background:var(--shu)"></span>Golden抽選</span>
+    </div>
+
+    <p class="note warn" style="margin-top:12px"><b>重要：2チェーンはOrigin直下から完全独立が必須。</b>途中の個体（C1等）を共有すると、その個体が両親系図の浅い世代に重複してForbidden判定となり、Nicks・Rare抽選が無効化されます。右親のUncommonもチェーン間で使い回し不可。</p>
+    <p class="note" style="margin-top:8px">Golden当選率は仕様非公開のため、ここで確定できるのは「抽選を引く権利のコスト」までです。最大のボトルネックはEVTでなく<b>各世代のPrime育成（BIND周回）</b>と直列4世代の待ち時間です。</p>
+  </div>
+</section>
+
+<!-- ═══ TAB 5: 手持ち最適化 ═══ -->
+<section class="pane" id="p5">
+  <div class="card">
+    <h2>▸ 手持ちNFT登録</h2>
+    <p class="note">保有MANEKINEKOを登録してください。血統は<b>系統グループ（Z/L/V/N）</b>で入力（自身＋系図1G〜3G）。系図上のOrigin/Elite/重複個体は「注目個体」に個体名で登録すると、Inbreeding判定に使われます（同名＝同一個体として照合）。</p>
+    <div id="roster"></div>
+    <button class="mini" id="nftAdd">＋ NFTを追加</button>
+    <button class="mini" id="nftSample">サンプル4体を読み込む（デモ用）</button>
+  </div>
+
+  <div class="card">
+    <h2>▸ 目的別レコメンド</h2>
+    <label class="fl">ブリードの目的</label>
+    <select id="goal">
+      <option value="rare">Rare獲得（固定抽選 50/20/10%）</option>
+      <option value="prank">高P-rank（Nicks・Genesis premium最大化）</option>
+      <option value="golden">Good Inbreeding（Origin/Elite重複でRare上振れ）</option>
+      <option value="risk">Special Risk（Danger/Forbidden博打）</option>
+      <option value="elite">Elite生成（White TAIYAKI・U×U）</option>
+      <option value="cheap">コスト最小のUncommon量産</option>
+    </select>
+    <button class="btn" id="recGo">最適ペアを計算</button>
+    <div id="recOut"></div>
+  </div>
+</section>
+
+<footer class="note" style="text-align:center;padding-top:6px">
+  数値根拠：SyFu GitBook 第9章 Season 1（docs.syfu.io）。仕様変更時は要再計算。<br>本ツールは資産価値・当選を保証しません。
+</footer>
+</div>
+
+<script>
+/* ══════════ 仕様データ（GitBook 9.1 / 9.2） ══════════ */
+const COMBOS = {
+  uu:{label:'Uncommon × Uncommon', evt:100, rate:0,    econL:50, econR:50, tai:{u:2,r:0}},
+  ur:{label:'左Uncommon × 右Rare', evt:120, rate:0.10, econL:50, econR:70, tai:{u:1,r:1}},
+  ru:{label:'左Rare × 右Uncommon', evt:140, rate:0.20, econL:90, econR:50, tai:{u:1,r:1}},
+  rr:{label:'Rare × Rare',         evt:160, rate:0.50, econL:90, econR:70, tai:{u:0,r:2}},
+};
+const econOf = (c,bcL,bcR)=> (COMBOS[c].econL+20*bcL)+(COMBOS[c].econR+20*bcR);
+const fmt = n=>n.toLocaleString('ja-JP');
+const $=id=>document.getElementById(id);
+
+/* ══════════ tabs ══════════ */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on'); $(t.dataset.p).classList.add('on');
+  });
+});
+
+/* ══════════ TAB1: cost calculator ══════════ */
+function taiLabel(c, white){
+  const t = COMBOS[c].tai;
+  if(c==='uu' && white) return 'Unc×1＋White×1';
+  const parts=[];
+  if(t.u) parts.push('Unc×'+t.u);
+  if(t.r) parts.push('Rare×'+t.r);
+  return parts.join('＋');
+}
+function calc1(){
+  const c=$('c1combo').value, bcL=+$('c1bcl').value, bcR=+$('c1bcr').value;
+  const isUU = c==='uu';
+  $('c1whiteWrap').style.opacity = isUU?1:.35;
+  $('c1white').disabled = !isUU;
+  if(!isUU) $('c1white').checked=false;
+  const white = $('c1white').checked;
+
+  $('c1evt').textContent = COMBOS[c].evt;
+  $('c1econ').textContent = econOf(c,bcL,bcR);
+  $('c1tai').textContent = taiLabel(c,white);
+  const r = COMBOS[c].rate;
+  $('c1rate').textContent = r? (r*100)+'%' : 'なし';
+  $('c1ratebar').style.width = (r*100)+'%';
+  $('c1elite').textContent = white? '50%' : '—';
+
+  let n='';
+  if(c==='rr') n='Rare親は消費されず生存（BC・寿命のみ減少）。外れ時はUncommon P2以上で産まれます。';
+  else if(c==='ru'||c==='ur') n='外れ時はUncommon P2以上。Rare入りブリードにWhite TAIYAKIは使用不可。Rare超過EVT分（'+ (COMBOS[c].evt-100) +' EVT）は全額バーン。';
+  else n = white ? 'White TAIYAKI 2枚使用しても抽選は1回・確率は上がりません。Elite当選時のP-rankは左親以上。'
+                 : 'Rare固定抽選の対象外。Nicks×3＋左親P2以上で子のP-rank下限P1。';
+  $('c1note').textContent = n;
+}
+['c1combo','c1bcl','c1bcr','c1white'].forEach(id=>$(id).addEventListener('change',calc1));
+calc1();
+
+/* ══════════ 共通：連続試行の累計コスト（ペア5回制・BC逓増） ══════════ */
+function cumulative(c, n){
+  let evt=0, econ=0, taiU=0, taiR=0;
+  for(let i=0;i<n;i++){
+    const bc = i%5;                    // 各ペアはBC0から
+    evt  += COMBOS[c].evt;
+    econ += econOf(c,bc,bc);
+    taiU += COMBOS[c].tai.u; taiR += COMBOS[c].tai.r;
+  }
+  const pairs = Math.ceil(n/5);
+  return {evt,econ,taiU,taiR,pairs};
+}
+
+/* ══════════ TAB2: scenario table + chart ══════════ */
+function calc2(){
+  const c=$('c2combo').value, p=COMBOS[c].rate;
+  const nUp=1, nEx=Math.round(1/p), nDn=Math.ceil(Math.log(0.1)/Math.log(1-p));
+  const rows=[
+    {name:'上振れ（1回目で当選）', cls:'up', n:nUp},
+    {name:'期待値（平均 1/p）',    cls:'ex', n:nEx},
+    {name:'下振れ（90%tile）',     cls:'dn', n:nDn},
+  ];
+  let html='<table><thead><tr><th>シナリオ</th><th>試行</th><th>EVT</th><th>Econ</th><th>TAIYAKI</th><th>Rare親</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    const s=cumulative(c,r.n);
+    const rareP = c==='rr'? s.pairs*2 : s.pairs;
+    const tai = (s.taiR?('R'+s.taiR):'')+(s.taiR&&s.taiU?'+':'')+(s.taiU?('U'+s.taiU):'');
+    html+=`<tr${r.cls==='ex'?' class="hl"':''}><td><span class="scen ${r.cls}">${r.name}</span></td><td>${r.n}回</td><td class="evt">${fmt(s.evt)}</td><td class="econ">${fmt(s.econ)}</td><td class="tai">${tai}</td><td>${rareP}体</td></tr>`;
+  });
+  html+='</tbody></table>';
+  $('c2table').innerHTML=html;
+
+  // SVG cumulative probability curve
+  const maxN=Math.min(nDn+3, 30), W=640,H=240,L=44,B=26,T=14,R=10;
+  const px=n=>L+(n-1)/(maxN-1)*(W-L-R), py=v=>T+(1-v)*(H-T-B);
+  let path='';
+  for(let n=1;n<=maxN;n++){const v=1-Math.pow(1-p,n); path+=(n===1?'M':'L')+px(n).toFixed(1)+','+py(v).toFixed(1);}
+  const mk=(n,col,lab)=>{const v=1-Math.pow(1-p,n);
+    return `<circle cx="${px(n)}" cy="${py(v)}" r="5" fill="${col}"/><text x="${px(n)}" y="${py(v)-10}" fill="${col}" font-size="11" text-anchor="middle" font-family="DotGothic16">${lab}${n}</text>`;};
+  let grid='';
+  [0,.25,.5,.75,.9,1].forEach(v=>{grid+=`<line x1="${L}" y1="${py(v)}" x2="${W-R}" y2="${py(v)}" stroke="#3a3258" stroke-width="1" ${v===.9?'stroke-dasharray="4 3" stroke="#d05045"':''}/><text x="${L-6}" y="${py(v)+4}" fill="#8d86a3" font-size="10" text-anchor="end">${Math.round(v*100)}%</text>`;});
+  let xt='';
+  for(let n=1;n<=maxN;n+= maxN>15?5: maxN>8?2:1){xt+=`<text x="${px(n)}" y="${H-8}" fill="#8d86a3" font-size="10" text-anchor="middle">${n}</text>`;}
+  $('c2chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="累積当選確率">
+    ${grid}${xt}
+    <path d="${path}" fill="none" stroke="#e8b64c" stroke-width="2.5"/>
+    ${mk(nUp,'#7fbf7a','')}${mk(nEx,'#e8b64c','')}${mk(nDn,'#d05045','')}
+    <text x="${W-R}" y="${H-8}" fill="#8d86a3" font-size="10" text-anchor="end">試行回数 n</text>
+  </svg>`;
+
+  $('c2note').textContent = c==='rr'
+    ? 'R×R：下振れでも1ペア（5回上限内）で完結。親Rareは生存するため実質「拘束2体」で回せます。'
+    : `このルートは当選前にRare親の5回枠を食い潰すリスクが高く、下振れではRare親${cumulative(c,nDn).pairs}体の投入が必要。Rare増産目的ならR×R推奨。`;
+}
+$('c2combo').addEventListener('change',calc2);
+calc2();
+
+/* ══════════ TAB3: gacha ══════════ */
+let G={n:0,evt:0,econ:0,taiU:0,taiR:0,bc:0,pairs:1,rares:0};
+function gReset(){G={n:0,evt:0,econ:0,taiU:0,taiR:0,bc:0,pairs:1,rares:0};
+  $('c3log').innerHTML=''; $('c3result').textContent='ブリード実行 を押す';
+  $('c3result').className='result'; $('mari').className='mari'; $('mari').textContent='まり'; gPaint();}
+function gPaint(){
+  const c=$('c3combo').value;
+  $('c3bc').textContent=G.bc; $('c3n').textContent=G.n; $('c3pairs').textContent=G.pairs;
+  $('c3evt').textContent=fmt(G.evt); $('c3econ').textContent=fmt(G.econ);
+  $('c3tai').textContent=(G.taiR?('Rare×'+G.taiR):'')+(G.taiR&&G.taiU?'\n':'')+(G.taiU?('Unc×'+G.taiU):'')||'—';
+  $('c3rares').textContent=G.rares;
+  $('c3consumed').textContent = (c==='rr'? G.pairs*2 : G.pairs)+'体';
+}
+$('c3go').addEventListener('click',()=>{
+  const c=$('c3combo').value, p=COMBOS[c].rate;
+  if(G.bc>=5){G.bc=0;G.pairs++;
+    const d=document.createElement('div');d.textContent=`── ペア交代（${G.pairs}組目・BC0から） ──`;$('c3log').prepend(d);}
+  G.n++; G.evt+=COMBOS[c].evt; G.econ+=econOf(c,G.bc,G.bc);
+  G.taiU+=COMBOS[c].tai.u; G.taiR+=COMBOS[c].tai.r; G.bc++;
+  const win=Math.random()<p;
+  const m=$('mari'); m.classList.remove('roll'); void m.offsetWidth; m.classList.add('roll');
+  $('c3go').disabled=true;
+  setTimeout(()=>{
+    $('c3go').disabled=false;
+    if(win){G.rares++; m.className='mari gold roll'; m.textContent='金';
+      $('c3result').textContent='★ RARE P0 誕生！'; $('c3result').className='result rare';}
+    else{m.className='mari roll'; m.textContent='白';
+      $('c3result').textContent='Uncommon（P2以上）'; $('c3result').className='result unc';}
+    const d=document.createElement('div');
+    d.className=win?'r':'';
+    d.textContent=`#${G.n}｜${win?'★RARE':'Unc'}｜EVT ${COMBOS[c].evt}／Econ ${econOf(c,G.bc-1,G.bc-1)}`;
+    $('c3log').prepend(d);
+    gPaint();
+  },520);
+});
+$('c3reset').addEventListener('click',gReset);
+$('c3combo').addEventListener('change',gReset);
+gPaint();
+
+/* ══════════ TAB4: Golden route planner ══════════ */
+function calc4(){
+  const d=Math.max(1,Math.min(20, +$('c4draws').value||1));
+  const white=$('c4white').checked;
+  const pairs=Math.ceil(d/5);
+  const origins=Math.ceil(pairs/2);
+  let evt=0, econ=0, breeds=0, oBC=0;   // oBC: Origin側のBreed Count（Origin1体あたり最大4=2ペア分）
+
+  for(let pi=0;pi<pairs;pi++){
+    if(pi%2===0) oBC = 0;               // 新しいOriginに交代
+    // セットアップ7ブリード：チェーンA(O起点+2) ＋ チェーンB(O起点+3)
+    // A1: O(oBC) × U(0)
+    econ += (50+20*oBC)+50; evt+=100; breeds++; oBC++;
+    // B1: O(oBC) × U(0)
+    econ += (50+20*oBC)+50; evt+=100; breeds++; oBC++;
+    // A2,A3, B2,B3,B4 ＝ 中間×新品U（全親BC0）
+    for(let k=0;k<5;k++){econ+=100; evt+=100; breeds++;}
+    // このペアの抽選回数
+    const m = Math.min(5, d-pi*5);
+    for(let k=1;k<=m;k++){econ += 100+40*(k-1); evt+=100; breeds++;}
+  }
+  const taiU = breeds*2 - (white? d:0);
+  const taiW = white? d:0;
+  const raise = pairs*14;               // 購入U7体＋中間7体
+
+  $('c4breeds').textContent=breeds;
+  $('c4evt').textContent=fmt(evt);
+  $('c4econ').textContent=fmt(econ);
+  $('c4tai').textContent='Unc×'+taiU+(taiW?('＋White×'+taiW):'');
+  $('c4raise').textContent=raise+'体';
+  $('c4origins').textContent=origins+'体';
+  $('c4slotnote').innerHTML =
+    `Origin1体の5枠でセットアップ可能なのは<b>2ペア（=抽選10回）まで</b>（1ペアにつきO枠2消費、5枠目単独ではチェーン対を作れず余り）。`
+    + ` 深いペア（C3a×C4b）は双方BC0のため<b>同一ペアで最大5回再交配</b>でき、毎回Golden（3G×4G）が発火します。`
+    + (white? ' White TAIYAKI併用時、各回でElite 50%抽選が同時に走ります（Rare抽選とは独立）。':'');
+
+  drawTree();
+}
+function drawTree(){
+  // 1ペア分の系図SVG（チェーンA:3世代 / チェーンB:4世代 → Golden）
+  const W=560,H=330;
+  const node=(x,y,txt,col,sub)=>`
+    <rect x="${x-40}" y="${y-16}" width="80" height="32" rx="8" fill="#262040" stroke="${col}" stroke-width="1.6"/>
+    <text x="${x}" y="${y-1}" fill="${col}" font-size="11" text-anchor="middle" font-family="DotGothic16">${txt}</text>
+    <text x="${x}" y="${y+11}" fill="#8d86a3" font-size="8.5" text-anchor="middle">${sub||''}</text>`;
+  const edge=(x1,y1,x2,y2,dash)=>`<line x1="${x1}" y1="${y1+16}" x2="${x2}" y2="${y2-16}" stroke="#5a5178" stroke-width="1.4" ${dash?'stroke-dasharray="4 3"':''}/>`;
+  const G='#e8b64c', B='#6f9fe0', U='#8d86a3', S='#d05045';
+  const ax=140, bx=420, ux=(x)=>x+95;
+  let s='';
+  // Origin top center
+  s+=node(280,30,'ORIGIN','#e8b64c','Genesis血統・O枠2消費');
+  // chain A (left, 3段)
+  s+=edge(280,30,ax,95); s+=edge(280,30,bx,95);
+  s+=node(ax,95,'C1a','#6f9fe0','O@1G');
+  s+=node(ax,160,'C2a','#6f9fe0','O@2G');
+  s+=node(ax,225,'C3a','#6f9fe0','O@3G ★左親');
+  s+=edge(ax,95,ax,160); s+=edge(ax,160,ax,225);
+  // chain B (right, 4段)
+  s+=node(bx,95,'C1b','#6f9fe0','O@1G');
+  s+=node(bx,160,'C2b','#6f9fe0','O@2G');
+  s+=node(bx,225,'C3b','#6f9fe0','O@3G');
+  s+=node(bx,290,'C4b','#6f9fe0','O@4G ★右親');
+  s+=edge(bx,95,bx,160); s+=edge(bx,160,bx,225); s+=edge(bx,225,bx,290);
+  // 購入Uncommon（右親）: 各段の右に小ノード
+  const uNode=(x,y,i)=>`
+    <rect x="${x-26}" y="${y-12}" width="52" height="24" rx="6" fill="#1e1930" stroke="#8d86a3" stroke-width="1"/>
+    <text x="${x}" y="${y+4}" fill="#8d86a3" font-size="9" text-anchor="middle">U${i}</text>`;
+  s+=uNode(ax-95,95,1)+uNode(ax-95,160,2)+uNode(ax-95,225,3);
+  s+=uNode(bx+95,95,4)+uNode(bx+95,160,5)+uNode(bx+95,225,6)+uNode(bx+95,290,7);
+  // connect U to chain nodes
+  s+=`<line x1="${ax-69}" y1="95" x2="${ax-40}" y2="95" stroke="#5a5178" stroke-dasharray="3 3"/>`;
+  s+=`<line x1="${ax-69}" y1="160" x2="${ax-40}" y2="160" stroke="#5a5178" stroke-dasharray="3 3"/>`;
+  s+=`<line x1="${ax-69}" y1="225" x2="${ax-40}" y2="225" stroke="#5a5178" stroke-dasharray="3 3"/>`;
+  s+=`<line x1="${bx+69}" y1="95" x2="${bx+40}" y2="95" stroke="#5a5178" stroke-dasharray="3 3"/>`;
+  s+=`<line x1="${bx+69}" y1="160" x2="${bx+40}" y2="160" stroke="#5a5178" stroke-dasharray="3 3"/>`;
+  s+=`<line x1="${bx+69}" y1="225" x2="${bx+40}" y2="225" stroke="#5a5178" stroke-dasharray="3 3"/>`;
+  s+=`<line x1="${bx+69}" y1="290" x2="${bx+40}" y2="290" stroke="#5a5178" stroke-dasharray="3 3"/>`;
+  // FINAL golden
+  s+=`<line x1="${ax}" y1="241" x2="270" y2="292" stroke="#d05045" stroke-width="2"/>`;
+  s+=`<line x1="${bx-40}" y1="290" x2="315" y2="292" stroke="#d05045" stroke-width="2"/>`;
+  s+=`<rect x="230" y="278" width="112" height="34" rx="10" fill="#2b1516" stroke="#d05045" stroke-width="2"/>
+      <text x="286" y="294" fill="#d05045" font-size="11" text-anchor="middle" font-family="DotGothic16">GOLDEN 3G×4G</text>
+      <text x="286" y="306" fill="#8d86a3" font-size="8.5" text-anchor="middle">最大5回再交配可</text>`;
+  $('c4tree').innerHTML=`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`;
+}
+['c4draws','c4white'].forEach(id=>$(id).addEventListener('input',calc4));
+calc4();
+
+/* ══════════ TAB5: roster + recommender ══════════ */
+let NFTS=[];
+const GRP=['','Z','L','V','N'];
+const NICK={Z:'L',L:'V',V:'N',N:'Z'};   // Season1相性: Z→L→V→N→Z
+
+function nftNew(o={}){return Object.assign({
+  name:'猫'+(NFTS.length+1), rarity:'U', special:'none', p:0, bc:0, ok:true,
+  ped:['Z','','',''], gslot:-1, anc:[]
+},o);}
+
+function rosterRender(){
+  const R=$('roster');
+  if(!NFTS.length){R.innerHTML='<div class="empty">NFT未登録。「＋NFTを追加」かサンプルで開始。</div>';return;}
+  R.innerHTML=NFTS.map((n,i)=>`
+  <div class="nft" data-i="${i}">
+    <button class="del" data-act="del">削除</button>
+    <input type="text" value="${n.name}" data-f="name" aria-label="個体名">
+    <div class="grid3">
+      <div><label>レア度</label><select data-f="rarity">
+        <option value="U"${n.rarity==='U'?' selected':''}>Uncommon</option>
+        <option value="R"${n.rarity==='R'?' selected':''}>Rare</option></select></div>
+      <div><label>特殊</label><select data-f="special">
+        <option value="none"${n.special==='none'?' selected':''}>なし</option>
+        <option value="origin"${n.special==='origin'?' selected':''}>Origin</option>
+        <option value="elite"${n.special==='elite'?' selected':''}>Elite</option></select></div>
+      <div><label>P-rank</label><select data-f="p">${[0,1,2,3,4].map(v=>`<option value="${v}"${n.p===v?' selected':''}>P${v}</option>`).join('')}</select></div>
+    </div>
+    <div class="grid3">
+      <div><label>Breed Count</label><select data-f="bc">${[0,1,2,3,4,5].map(v=>`<option value="${v}"${n.bc===v?' selected':''}>${v}${v===5?'（不可）':''}</option>`).join('')}</select></div>
+      <div style="grid-column:span 2"><label>&nbsp;</label>
+        <label class="chk" style="margin:0"><input type="checkbox" data-f="ok"${n.ok?' checked':''}><span style="font-size:.72rem">ブリード可（Prime・寿命40%+・HP100%・出品/CD外）</span></label></div>
+    </div>
+    <div class="grid4">
+      ${['自身','1G','2G','3G'].map((lb,s)=>`<div><label>${lb}系統</label><select data-f="ped${s}">
+        ${GRP.map(g=>`<option value="${g}"${n.ped[s]===g?' selected':''}>${g||'−'}</option>`).join('')}</select></div>`).join('')}
+    </div>
+    <div class="grid3">
+      <div style="grid-column:span 3"><label>Genesis血統の位置</label><select data-f="gslot">
+        ${[-1,0,1,2,3].map(v=>`<option value="${v}"${n.gslot===v?' selected':''}>${v<0?'なし':['自身','1G','2G','3G'][v]}</option>`).join('')}</select></div>
+    </div>
+    <label style="font-size:.62rem;color:var(--sub);display:block;margin-top:10px">系図内の注目個体（Origin/Elite/重複しうる個体）</label>
+    ${n.anc.map((a,j)=>`
+    <div class="ancrow" data-j="${j}">
+      <div><label>個体名</label><input type="text" value="${a.id}" data-f="ancid"></div>
+      <div><label>世代</label><select data-f="ancgen">${[1,2,3].map(g=>`<option value="${g}"${a.gen===g?' selected':''}>${g}G</option>`).join('')}</select></div>
+      <div><label>種別</label><select data-f="anctype">
+        <option value="none"${a.type==='none'?' selected':''}>通常</option>
+        <option value="origin"${a.type==='origin'?' selected':''}>Origin</option>
+        <option value="elite"${a.type==='elite'?' selected':''}>Elite</option></select></div>
+      <button data-act="ancdel">✕</button>
+    </div>`).join('')}
+    <button class="mini" data-act="ancadd" style="margin-top:6px">＋ 注目個体を追加</button>
+  </div>`).join('');
+}
+$('roster').addEventListener('click',e=>{
+  const card=e.target.closest('.nft'); if(!card)return;
+  const i=+card.dataset.i, act=e.target.dataset.act;
+  if(act==='del'){NFTS.splice(i,1);rosterRender();}
+  else if(act==='ancadd'){NFTS[i].anc.push({id:'O',gen:2,type:'origin'});rosterRender();}
+  else if(act==='ancdel'){const j=+e.target.closest('.ancrow').dataset.j;NFTS[i].anc.splice(j,1);rosterRender();}
+});
+$('roster').addEventListener('change',e=>{
+  const card=e.target.closest('.nft'); if(!card)return;
+  const n=NFTS[+card.dataset.i], f=e.target.dataset.f, row=e.target.closest('.ancrow');
+  if(row){const a=n.anc[+row.dataset.j];
+    if(f==='ancid')a.id=e.target.value.trim();
+    if(f==='ancgen')a.gen=+e.target.value;
+    if(f==='anctype')a.type=e.target.value; return;}
+  if(f==='name')n.name=e.target.value.trim()||n.name;
+  else if(f==='ok')n.ok=e.target.checked;
+  else if(f&&f.startsWith('ped'))n.ped[+f.slice(3)]=e.target.value;
+  else if(f==='gslot')n.gslot=+e.target.value;
+  else if(f==='p'||f==='bc')n[f]=+e.target.value;
+  else if(f)n[f]=e.target.value;
+});
+$('nftAdd').addEventListener('click',()=>{NFTS.push(nftNew());rosterRender();});
+$('nftSample').addEventListener('click',()=>{
+  NFTS=[
+    nftNew({name:'こばん',rarity:'R',p:0,bc:1,ped:['Z','L','',''],gslot:-1}),
+    nftNew({name:'ふく',rarity:'R',p:1,bc:0,ped:['L','V','',''],gslot:1}),
+    nftNew({name:'たま',rarity:'U',p:2,bc:0,ped:['V','N','Z',''],anc:[{id:'O',gen:2,type:'origin'}]}),
+    nftNew({name:'しろ',rarity:'U',p:1,bc:1,ped:['N','Z','',''],anc:[{id:'O',gen:3,type:'origin'}]}),
+  ];rosterRender();
+});
+
+/* ── pair evaluation ── */
+function pedigreeInds(n){ // 子視点の世代: 親自身=1G, 親のkG=子の(k+1)G
+  const arr=[{id:n.name,gen:1,type:n.special}];
+  n.anc.forEach(a=>{if(a.id)arr.push({id:a.id,gen:a.gen+1,type:a.type});});
+  return arr;
+}
+function ibRank(gL,gR){
+  if(gL===1||gR===1)return 'forbidden';
+  if(gL===2&&gR===2)return 'forbidden';
+  if((gL===2&&gR===3)||(gL===3&&gR===2))return 'forbidden';
+  if(gL===3&&gR===3)return 'danger';
+  if((gL===2&&gR===4)||(gL===4&&gR===2))return 'danger';
+  if((gL===3&&gR===4)||(gL===4&&gR===3))return 'golden';
+  if(gL===4&&gR===4)return 'stable';
+  return null;
+}
+const IB_SEV={forbidden:4,danger:3,golden:2,stable:1};
+function evalPair(L,Rt){
+  const combo = L.rarity==='R' ? (Rt.rarity==='R'?'rr':'ru') : (Rt.rarity==='R'?'ur':'uu');
+  const evt=COMBOS[combo].evt;
+  const econ=((L.rarity==='R'?90:50)+20*L.bc)+((Rt.rarity==='R'?70:50)+20*Rt.bc);
+  const tai=COMBOS[combo].tai;
+  // Inbreeding
+  const li=pedigreeInds(L), ri=pedigreeInds(Rt);
+  let main=null, dup=[];
+  li.forEach(a=>ri.forEach(b=>{
+    if(a.id===b.id){const r=ibRank(a.gen,b.gen); if(!r)return;
+      const sp=(a.type!=='none'||b.type!=='none');
+      dup.push({id:a.id,gL:a.gen,gR:b.gen,rank:r,special:sp});
+      if(!main||IB_SEV[r]>IB_SEV[main.rank])main={id:a.id,rank:r,special:sp};
+    }}));
+  const bad = main&&(main.rank==='forbidden'||main.rank==='danger');
+  const goodSp = !bad ? dup.find(d=>d.special&&(d.rank==='golden'||d.rank==='stable')) : null;
+  const riskSp = dup.find(d=>d.special&&(d.rank==='forbidden'||d.rank==='danger'));
+  // Nicks（Danger/Forbiddenで無効）
+  let nicks=[],genesis=false;
+  if(!bad){
+    for(let i=0;i<4;i++)for(let j=0;j<4;j++){
+      const a=L.ped[i],b=Rt.ped[j];
+      if(a&&b&&NICK[a]===b)nicks.push({i,j,g:(L.gslot===i||Rt.gslot===j)});
+    }
+    nicks.sort((a,b)=>(b.g?1:0)-(a.g?1:0));
+    nicks=nicks.slice(0,3);
+    genesis=nicks.some(x=>x.g);
+  }
+  return {L,R:Rt,combo,evt,econ,tai,rate:COMBOS[combo].rate,main,dup,bad,goodSp,riskSp,
+          nicks:nicks.length,genesis,
+          valid:L.ok&&Rt.ok&&L.bc<5&&Rt.bc<5};
+}
+
+/* ── goal scoring ── */
+const GOALS={
+ rare:{f:e=>e.valid&&e.rate>0,
+   s:e=>e.rate*1000+e.nicks*5+(e.genesis?3:0)-e.econ*0.01,
+   why:e=>`Rare P0固定抽選 ${e.rate*100}%。外れてもUncommon P2以上${e.nicks?`＋Nicks×${e.nicks}で更に上振れ可`:''}。${e.bad?'※Danger/Forbidden重複ありNicks無効（固定抽選率は不変）。':''}R×R以外はRare親の5回枠を消費する点に注意。`},
+ prank:{f:e=>e.valid&&!e.bad,
+   s:e=>e.nicks*100+(e.genesis?60:0)+(e.L.p>=2?30:0)+(e.goodSp?(e.goodSp.rank==='golden'?40:20):0)-e.econ*0.05,
+   why:e=>`有効Nicks×${e.nicks}${e.genesis?'＋Genesis premium':''}${e.L.p>=2?`。左親P${e.L.p}のため子の下限が引き上げ`:'。左親をP2以上にすると下限P1が狙えます'}${e.goodSp?`。${e.goodSp.rank==='golden'?'Golden':'Stable'}のGood Inbreedingも同時成立`:''}。`},
+ golden:{f:e=>e.valid&&!!e.goodSp,
+   s:e=>(e.goodSp&&e.goodSp.rank==='golden'?100:60)+e.nicks*10+(e.genesis?15:0)-e.econ*0.05,
+   why:e=>`特殊個体「${e.goodSp.id}」が${e.goodSp.gL}G×${e.goodSp.gR}G＝${e.goodSp.rank==='golden'?'Golden':'Stable'}で重複 → Rare/P-rank上振れ抽選（当選率非公開）${e.nicks?`。Nicks×${e.nicks}併用可`:''}。`},
+ risk:{f:e=>e.valid&&!!e.riskSp,
+   s:e=>(e.riskSp.rank==='forbidden'?90:80)-e.econ*0.05,
+   why:e=>`特殊個体「${e.riskSp.id}」が${e.riskSp.gL}G×${e.riskSp.gR}G＝${e.riskSp.rank==='forbidden'?'Forbidden':'Danger'} → Special Risk（低確率でP4/Rare、確率非公開）。Nicks・Genesis premiumは無効化。DangerとForbiddenの当選率差も非公開＝完全な博打です。`},
+ elite:{f:e=>e.valid&&e.combo==='uu',
+   s:e=>e.L.p*30+e.nicks*8+(e.genesis?5:0)-(e.bad?50:0)-e.econ*0.05,
+   why:e=>`White TAIYAKI使用でElite抽選50%。当選時のP-rankは左親（P${e.L.p}）以上を継承するため左親のP-rankが最重要${e.bad?'。※Danger/Forbidden重複ありNicks無効':''}。TAIYAKIはUnc×1＋White×1に置換。`},
+ cheap:{f:e=>e.valid,
+   s:e=>-(e.evt+e.econ)-(e.bad?30:0),
+   why:e=>`最小コスト構成${e.bad?'。※Danger/Forbidden重複あり（Nicks無効・通常個体なら実害は上振れ消失のみ）':''}${e.nicks?`。Nicks×${e.nicks}付き`:''}。`},
+};
+const IB_LABEL={forbidden:'FORBIDDEN',danger:'DANGER',golden:'GOLDEN',stable:'STABLE'};
+
+$('recGo').addEventListener('click',()=>{
+  const out=$('recOut'), g=GOALS[$('goal').value];
+  if(NFTS.length<2){out.innerHTML='<div class="empty">NFTを2体以上登録してください。</div>';return;}
+  let evs=[];
+  NFTS.forEach((a,i)=>NFTS.forEach((b,j)=>{if(i!==j)evs.push(evalPair(a,b));}));
+  const inval=evs.filter(e=>!e.valid).length;
+  evs=evs.filter(g.f).sort((a,b)=>g.s(b)-g.s(a)).slice(0,6);
+  if(!evs.length){
+    out.innerHTML=`<div class="empty">この目的に合致するペアがありません。<br><span style="font-size:.7rem">${
+      $('goal').value==='golden'?'特殊個体（Origin/Elite）が両親の系図で3G×4Gまたは4G×4Gに重複する組み合わせが必要です。':
+      $('goal').value==='risk'?'特殊個体が浅い世代（1G〜3G相当）で重複する組み合わせが必要です。':
+      $('goal').value==='rare'?'Rare個体（ブリード可・BC5未満）が最低1体必要です。':
+      inval?'ブリード可否・BCをご確認ください。':''}</span></div>`;return;}
+  out.innerHTML=evs.map((e,i)=>{
+    const chips=[];
+    if(e.rate)chips.push(`<span class="chip g">Rare ${e.rate*100}%</span>`);
+    if(e.nicks)chips.push(`<span class="chip b">Nicks×${e.nicks}</span>`);
+    if(e.genesis)chips.push(`<span class="chip g">Genesis+</span>`);
+    if(e.main)chips.push(`<span class="chip ${e.main.rank==='golden'||e.main.rank==='stable'?(e.main.special?'gr':''):'r'}">${IB_LABEL[e.main.rank]}${e.main.special?'（特殊個体）':''}</span>`);
+    if(e.combo==='uu'&&$('goal').value==='elite')chips.push(`<span class="chip g">Elite 50%</span>`);
+    const taiTxt=$('goal').value==='elite'&&e.combo==='uu'?'Unc×1＋White×1':taiLabel(e.combo,false);
+    return `<div class="rec${i===0?' top':''}">
+      <h4><span class="rank">${i+1}位</span>${e.L.name}（左）× ${e.R.name}（右）</h4>
+      <div class="chips">${chips.join('')}</div>
+      <div class="cost">EVT <b>${e.evt}</b>｜Econ <b>${e.econ}</b>｜TAIYAKI <b>${taiTxt}</b>｜左BC${e.L.bc}・右BC${e.R.bc}</div>
+      <div class="why">${g.why(e)} 子の血統ベースは左「${e.L.name}」の系統（${e.L.ped[0]||'?'}）を継承。</div>
+    </div>`;
+  }).join('')+`<p class="note" style="margin-top:10px">左右は非対称（Econ・Rare率・血統継承・Elite継承すべて左右で変化）のため、同じ2体でも左右入替の両方を評価しています。</p>`;
+});
+rosterRender();
+</script>
+</body>
+</html>

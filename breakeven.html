@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SyFu 損益分岐点シミュレータ｜BREAK-EVEN</title>
+<link rel="icon" type="image/png" href="./assets/favicon.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+:root{
+  --bg:#14101d;--panel:#1e1930;--panel2:#262040;--line:#3a3258;
+  --ink:#ece5d8;--sub:#8d86a3;--gold:#e8b64c;--gold-soft:#f0d18a;
+  --blue:#6f9fe0;--tai:#c98d5e;--shu:#d05045;--green:#7fbf7a;--r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Zen Kaku Gothic New',sans-serif;line-height:1.6;min-height:100vh;
+  background-image:radial-gradient(ellipse 80% 40% at 50% -5%, rgba(232,182,76,.07), transparent);}
+.wrap{max-width:760px;margin:0 auto;padding:16px 14px 80px}
+header{display:flex;align-items:center;gap:12px;padding:10px 2px 18px}
+.neko{width:44px;height:44px;flex:none;image-rendering:pixelated}
+h1{font-family:'DotGothic16',monospace;font-size:1.12rem;letter-spacing:.05em;line-height:1.25}
+h1 small{display:block;font-size:.62rem;color:var(--sub);letter-spacing:.18em;margin-top:2px}
+.gold{color:var(--gold)}.blue{color:var(--blue)}.shu{color:var(--shu)}.green{color:var(--green)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px}
+.tab{font-family:'DotGothic16',monospace;font-size:.72rem;background:var(--panel);border:1px solid var(--line);
+  color:var(--sub);border-radius:10px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .15s}
+.tab .tno{display:block;font-size:.6rem;opacity:.55;margin-bottom:2px}
+.tab.on{background:linear-gradient(180deg,#2e2748,#262040);color:var(--gold);border-color:var(--gold)}
+.tab:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.pane{display:none;animation:fade .25s ease}.pane.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.card h2{font-family:'DotGothic16',monospace;font-size:.92rem;color:var(--gold-soft);margin-bottom:12px;letter-spacing:.04em}
+.card h3{font-size:.8rem;color:var(--sub);margin:14px 0 6px;font-weight:700;border-top:1px solid var(--line);padding-top:12px}
+.note{font-size:.73rem;color:var(--sub);line-height:1.55}
+.note b{color:var(--ink)}
+.warn{border-left:3px solid var(--shu);padding-left:10px;margin-top:10px}
+.info{border-left:3px solid var(--blue);padding-left:10px;margin-top:10px}
+label.fl{display:block;font-size:.72rem;color:var(--sub);margin:10px 0 3px;font-weight:500}
+label.fl b{color:var(--gold-soft)}
+select,input[type=number]{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:10px 12px;font-size:.95rem;font-family:inherit}
+select:focus,input:focus{outline:2px solid var(--gold);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.chk{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:.82rem;cursor:pointer}
+.chk input{width:20px;height:20px;accent-color:var(--gold)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.stats2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
+.stat .k{font-size:.6rem;color:var(--sub);letter-spacing:.04em}
+.stat .v{font-family:'DotGothic16',monospace;font-size:1.15rem;margin-top:2px}
+.stat .u{font-size:.58rem;color:var(--sub)}
+.stat.big{grid-column:span 3;padding:14px}
+.stat.big .v{font-size:1.7rem}
+.bep{background:linear-gradient(180deg,#2b2312,#1e1930);border:1px solid var(--gold);border-radius:12px;padding:14px;margin-top:12px;text-align:center}
+.bep .k{font-size:.68rem;color:var(--gold-soft);letter-spacing:.08em}
+.bep .v{font-family:'DotGothic16',monospace;font-size:1.9rem;color:var(--gold);margin-top:2px}
+.bep .s{font-size:.66rem;color:var(--sub);margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:.76rem;margin-top:10px}
+th,td{padding:7px 6px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th{color:var(--sub);font-weight:500;font-size:.66rem}
+td:first-child,th:first-child{text-align:left}
+tr.hl td{background:rgba(232,182,76,.07)}
+.chart{margin-top:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 6px 4px}
+.chart svg{width:100%;height:auto;display:block}
+.pm{font-family:'DotGothic16',monospace}
+.pos{color:var(--green)}.neg{color:var(--shu)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 2px 14px;margin-bottom:4px;border-bottom:1px solid var(--line)">
+  <a href="./index.html" style="display:flex;align-items:center;gap:9px;text-decoration:none">
+    <img src="./assets/logo_white.png" alt="SyFu" style="height:20px;width:auto">
+    <span style="font-family:'DotGothic16',monospace;color:var(--sub);font-size:.72rem;letter-spacing:.05em">TOOLS</span>
+  </a>
+  <a href="./index.html" style="font-family:'DotGothic16',monospace;font-size:.68rem;color:var(--sub);text-decoration:none;border:1px solid var(--line);border-radius:20px;padding:5px 12px">← 一覧</a>
+</div>
+<header>
+  <svg class="neko" viewBox="0 0 16 16" aria-hidden="true">
+    <g fill="#e8b64c"><rect x="3" y="2" width="2" height="2"/><rect x="11" y="2" width="2" height="2"/>
+    <rect x="3" y="4" width="10" height="5"/><rect x="4" y="9" width="8" height="5"/>
+    <rect x="13" y="6" width="2" height="4"/><rect x="12" y="5" width="2" height="2"/></g>
+    <g fill="#14101d"><rect x="5" y="5" width="2" height="2"/><rect x="9" y="5" width="2" height="2"/>
+    <rect x="7" y="7" width="2" height="1"/></g>
+    <rect x="6" y="10" width="4" height="2" fill="#d05045"/><rect x="7" y="10" width="2" height="2" fill="#f0d18a"/>
+  </svg>
+  <h1>SyFu <span class="gold">BREAK-EVEN</span><small>損益分岐点シミュレータ｜GitBook仕様準拠</small></h1>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab on" data-p="p1" role="tab"><span class="tno">01</span>採掘損益<br>（BIND）</button>
+  <button class="tab" data-p="p2" role="tab"><span class="tno">02</span>ブリード<br>損益</button>
+  <button class="tab" data-p="p3" role="tab"><span class="tno">03</span>月次総合<br>・回収</button>
+</nav>
+
+<!-- ═══ 共通パラメータ ═══ -->
+<div class="card">
+  <h2>▸ 市場パラメータ（全タブ共通）</h2>
+  <div class="row3">
+    <div><label class="fl">EVT価格 <b>$</b></label><input type="number" id="pEvt" value="0.10" step="0.01" min="0.001"></div>
+    <div><label class="fl">Uncフロア <b>$</b></label><input type="number" id="pFloorU" value="150" step="5" min="0"></div>
+    <div><label class="fl">Rareフロア <b>$</b></label><input type="number" id="pFloorR" value="600" step="10" min="0"></div>
+  </div>
+  <div class="row3">
+    <div><label class="fl">Econ単価 <b>$/Econ</b></label><input type="number" id="pEcon" value="0.005" step="0.001" min="0"></div>
+    <div><label class="fl">Unc鯛焼き <b>$</b></label><input type="number" id="pTaiU" value="3" step="0.5" min="0"></div>
+    <div><label class="fl">Rare鯛焼き <b>$</b></label><input type="number" id="pTaiR" value="15" step="1" min="0"></div>
+  </div>
+  <div class="row3">
+    <div><label class="fl">表示通貨</label><select id="pCur"><option value="USD">USD</option><option value="JPY">JPY（円）</option></select></div>
+    <div><label class="fl">USD/JPY</label><input type="number" id="pJpy" value="155" step="0.5" min="1"></div>
+    <div><label class="fl">フロア連動係数 β <b id="pBetaV">0.7</b></label><input type="range" id="pBeta" value="0.7" step="0.05" min="0" max="1" style="width:100%;accent-color:var(--gold);margin-top:12px"></div>
+  </div>
+  <button class="tab" id="fetchEvt" style="width:100%;margin-top:12px;padding:12px">⟳ EVT価格を自動取得（DexScreener API）</button>
+  <div class="note" id="fetchStatus" style="margin-top:6px;text-align:center"></div>
+  <p class="note" style="margin-top:8px">EVT実勢はDexScreener（公式CA: 0x73b8…2fd5）で確認。Econ・TAIYAKIは自分の実調達単価を入力（Econ0.005=$0.5/100Econ想定のダミー値）。Common価格は<b>$50固定（運営補充）</b>のため入力不要＝寿命回復コストのUSDアンカーとして計算に組込済み。<b>β</b>＝EVT価格が変動したときフロアがどれだけ連動するか（0=独立、1=完全連動）。感度グラフとシナリオ表に反映されます。入力は全てUSD建て、表示のみ通貨切替。</p>
+</div>
+
+<!-- ═══ TAB 1: 採掘損益 ═══ -->
+<section class="pane on" id="p1">
+  <div class="card">
+    <h2>▸ 採掘（Check-in→BIND→EVT）の月次損益</h2>
+    <div class="row">
+      <div><label class="fl">1日の平均EVT獲得枚数</label><input type="number" id="m_evtDay" value="20" step="1" min="0"></div>
+      <div><label class="fl">稼働日数/月</label><input type="number" id="m_days" value="30" step="1" min="0" max="31"></div>
+    </div>
+    <div class="row">
+      <div><label class="fl">寿命消費% / EVT100枚（実測）</label><input type="number" id="m_lifeCoef" value="5" step="0.5" min="0"></div>
+      <div><label class="fl">Durability軽減（0〜20%）</label><input type="number" id="m_dur" value="12" step="1.2" min="0" max="20"></div>
+    </div>
+    <div class="row">
+      <div><label class="fl">月間Econ消費（HP回復・回数回復等）</label><input type="number" id="m_econ" value="3000" step="100" min="0"></div>
+      <div><label class="fl">EVT出金回数/月</label><input type="number" id="m_wd" value="2" step="1" min="0"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="m_pass" checked><span>SyFu Pass Standard（$4/月・EVT+10%）</span></label>
+
+    <div class="stats">
+      <div class="stat"><div class="k">月間EVT獲得</div><div class="v gold" id="m_oEvt">—</div></div>
+      <div class="stat"><div class="k">月間収入</div><div class="v" id="m_oRev">—</div><div class="u">USD</div></div>
+      <div class="stat"><div class="k">寿命消費</div><div class="v shu" id="m_oLife">—</div><div class="u">%/月</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="k">寿命コスト</div><div class="v" id="m_oLifeC">—</div><div class="u">USD/月</div></div>
+      <div class="stat"><div class="k">Econ+Pass+手数料</div><div class="v" id="m_oMisc">—</div><div class="u">USD/月</div></div>
+      <div class="stat"><div class="k">1EVT採掘原価</div><div class="v" id="m_oUnit">—</div><div class="u">USD</div></div>
+    </div>
+    <div class="stats"><div class="stat big"><div class="k">月次損益</div><div class="v pm" id="m_oProfit">—</div></div></div>
+    <div class="bep"><div class="k">損益分岐EVT価格</div><div class="v" id="m_oBep">—</div>
+      <div class="s">現在価格がこれを上回れば採掘黒字。寿命回復はCommon $50固定ペッグ（1%≒$1.52）のためUSD建てで固定。</div></div>
+    <div class="chart"><div id="m_chart"></div></div>
+    <p class="note info">仕様根拠：寿命回復 Common1体=33%（$50）／EVT回復式も「寿命%×基準USD×EVTレート」でUSDペッグ。EVT出金は1EVT固定・最低20EVT。Pass +10%はEVT獲得に乗算。HP消費3%/チェックイン（Durabilityで最大30%軽減）→回復はEconのため「月間Econ消費」に含めて入力。</p>
+  </div>
+</section>
+
+<!-- ═══ TAB 2: ブリード損益 ═══ -->
+<section class="pane" id="p2">
+  <div class="card">
+    <h2>▸ Uncommon量産（U×U）の1体損益</h2>
+    <div class="row">
+      <div><label class="fl">Econ計算基準</label>
+        <select id="b_econMode">
+          <option value="first">初回（BC0×BC0＝100 Econ）</option>
+          <option value="avg" selected>ペア5回平均（180 Econ/回）</option>
+        </select></div>
+      <div><label class="fl">子の出口</label>
+        <select id="b_exit">
+          <option value="floor" selected>フロアで売却（ロイヤリティ8%）</option>
+          <option value="nat">Naturalization（85 EVT回収・将来実装）</option>
+        </select></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="k">子1体コスト</div><div class="v" id="b_oCost">—</div><div class="u">USD</div></div>
+      <div class="stat"><div class="k">子1体収入</div><div class="v" id="b_oRev">—</div><div class="u">USD</div></div>
+      <div class="stat"><div class="k">1体あたり損益</div><div class="v pm" id="b_oPnl">—</div><div class="u">USD</div></div>
+    </div>
+    <div class="bep"><div class="k">損益分岐 Uncommonフロア</div><div class="v" id="b_oBepF">—</div>
+      <div class="s">フロア×0.92＝コストとなる価格。これ未満のフロアでは量産するほど赤字。</div></div>
+    <p class="note warn" id="b_natNote">Naturalizationは100 EVT基準から計7.5+7.5がバーンされ<b>返却85 EVT</b>。ブリードに100 EVT払う構造上、自然化出口は<b>単体で必ず赤字（EVT建て−15＋Econ＋鯛焼き）</b>＝利益源ではなく「売れない子の回収下限」です。要・寿命100%。</p>
+  </div>
+
+  <div class="card">
+    <h2>▸ Rare獲得（R×R 50%）の損益</h2>
+    <p class="note">Rare親2体は消費されず拘束のみ（BC・寿命減）。外れ子Uncommon（P2以上）はフロア売却で回収する前提。</p>
+    <div id="b_rareTable"></div>
+    <div class="bep"><div class="k">損益分岐 Rareフロア（期待値ベース）</div><div class="v" id="b_oBepR">—</div>
+      <div class="s">外れ子の回収を織り込んだ純コスト÷0.92。上振れ/下振れは表参照。</div></div>
+  </div>
+</section>
+
+<!-- ═══ TAB 3: 月次総合 ═══ -->
+<section class="pane" id="p3">
+  <div class="card">
+    <h2>▸ 月次キャッシュフローと投資回収</h2>
+    <div class="row">
+      <div><label class="fl">初期投資（NFT取得費計 $）</label><input type="number" id="t_capex" value="300" step="10" min="0"></div>
+      <div><label class="fl">月間ブリード子体数（U×U）</label><input type="number" id="t_breeds" value="4" step="1" min="0"></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="k">採掘損益/月</div><div class="v pm" id="t_oMine">—</div></div>
+      <div class="stat"><div class="k">ブリード損益/月</div><div class="v pm" id="t_oBreed">—</div></div>
+      <div class="stat"><div class="k">合計/月</div><div class="v pm" id="t_oTotal">—</div></div>
+    </div>
+    <div class="stats2">
+      <div class="stat"><div class="k">投資回収期間</div><div class="v gold" id="t_oPayback">—</div></div>
+      <div class="stat"><div class="k">総合損益分岐EVT価格</div><div class="v gold" id="t_oBep">—</div></div>
+    </div>
+    <div class="chart"><div id="t_chart"></div></div>
+    <h3>EVT価格変動シナリオ（フロアβ連動込み）</h3>
+    <div id="t_scen"></div>
+    <p class="note info" id="t_note"></p>
+    <p class="note warn">留意：実際はフロア価格もEVT価格と相関して動きます（EVT下落局面ではフロアも下がりやすく、グラフより悪化）。またEVT獲得レート（X/Y/Z%）・寿命係数は非公開のためアプリ内実測値の入力が前提。Trust Rank低下時は出金待機・報酬条件が悪化します。</p>
+  </div>
+</section>
+
+<footer class="note" style="text-align:center;padding-top:6px">
+  数値根拠：SyFu GitBook（Common $50固定／寿命回復33%/体／ロイヤリティ8%／EVT出金1 EVT・最低20／Pass $4・EVT+10%／ブリード第9章／Naturalization 85 EVT）。<br>非公開パラメータ（採掘レート・寿命係数・Econ実勢）は実測入力。本ツールは収益を保証しません。
+</footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmt=(n,d=2)=>n.toLocaleString('ja-JP',{maximumFractionDigits:d,minimumFractionDigits:0});
+let CUR='USD',JPY=155;
+const money=(n,d=2)=>{           // 月次損益・コスト・フロア等（表示通貨に変換）
+  if(CUR==='JPY')return (n<0?'−¥':'¥')+fmt(Math.abs(n)*JPY,0);
+  return (n<0?'−$':'$')+fmt(Math.abs(n),d);
+};
+const usd=(n,d=2)=>(n<0?'−$':'$')+fmt(Math.abs(n),d);   // トークン価格はUSD固定表示
+const LIFE_USD=50/33;   // 寿命1%あたりの回復コスト（Common $50÷33%ペッグ）
+
+document.querySelectorAll('.tab[data-p]').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab[data-p]').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on');$(t.dataset.p).classList.add('on');
+}));
+
+function P(){CUR=$('pCur').value;JPY=+$('pJpy').value||155;
+  $('pBetaV').textContent=$('pBeta').value;
+  return{
+  evt:+$('pEvt').value||0, fU:+$('pFloorU').value||0, fR:+$('pFloorR').value||0,
+  econ:+$('pEcon').value||0, taiU:+$('pTaiU').value||0, taiR:+$('pTaiR').value||0,
+  beta:+$('pBeta').value};}
+
+/* ── TAB1 採掘 ── */
+function mine(){
+  const p=P();
+  const evtDay=+$('m_evtDay').value||0, days=+$('m_days').value||0;
+  const coef=+$('m_lifeCoef').value||0, dur=Math.min(20,+$('m_dur').value||0)/100;
+  const econM=+$('m_econ').value||0, wd=+$('m_wd').value||0, pass=$('m_pass').checked;
+  const E=evtDay*days*(pass?1.10:1);                 // 月間EVT
+  const lifePct=E*(coef/100)*(1-dur);                // 月間寿命消費%
+  const lifeC=lifePct*LIFE_USD;                      // USDペッグ
+  const econC=econM*p.econ, passC=pass?4:0, feeEvt=wd*1;
+  const rev=E*p.evt, feeC=feeEvt*p.evt;
+  const profit=rev-lifeC-econC-passC-feeC;
+  const unit=E>0?(lifeC+econC+passC)/(E-feeEvt||1):0;
+  const bep=E-feeEvt>0?(lifeC+econC+passC)/(E-feeEvt):0;
+  $('m_oEvt').textContent=fmt(E,0);
+  $('m_oRev').textContent=money(rev);
+  $('m_oLife').textContent=fmt(lifePct,1);
+  $('m_oLifeC').textContent=money(lifeC);
+  $('m_oMisc').textContent=money(econC+passC+feeC);
+  $('m_oUnit').textContent=usd(unit,3);
+  paintPM('m_oProfit',profit);
+  $('m_oBep').textContent=usd(bep,3);
+  chartProfit('m_chart',pp=>E*pp-lifeC-econC-passC-feeEvt*pp,p.evt,bep,'EVT価格と月次採掘損益');
+  return {profit,E,fixed:lifeC+econC+passC,feeEvt};
+}
+function paintPM(id,v){const el=$(id);el.textContent=(v>=0?'+':'')+money(v);el.className=el.className.replace(/ (pos|neg)/g,'')+(v>=0?' pos':' neg');}
+
+/* ── TAB2 ブリード ── */
+function breed(){
+  const p=P();
+  const econAmt=$('b_econMode').value==='first'?100:180;
+  const cost=100*p.evt+econAmt*p.econ+2*p.taiU;
+  const exit=$('b_exit').value;
+  const rev=exit==='floor'?p.fU*0.92:85*p.evt;
+  const pnl=rev-cost;
+  $('b_oCost').textContent=money(cost);
+  $('b_oRev').textContent=money(rev);
+  paintPM('b_oPnl',pnl);
+  $('b_oBepF').textContent=money(cost/0.92);
+  // Rare (R×R): 上振れ1/期待2/下振れ4回。Econ累計160,360,880。外れ子=試行-1体をフロア回収
+  const rows=[['上振れ',1,160],['期待値',2,360],['下振れ90%',4,880]];
+  let h='<table><thead><tr><th>シナリオ</th><th>試行</th><th>総コスト</th><th>外れ子回収</th><th>純コスト</th><th>Rareフロア損益</th></tr></thead><tbody>';
+  let bepR=0;
+  rows.forEach(([nm,n,econSum],i)=>{
+    const c=n*160*p.evt+econSum*p.econ+n*2*p.taiR;
+    const sal=(n-1)*p.fU*0.92;
+    const net=c-sal;
+    const pr=p.fR*0.92-net;
+    if(i===1)bepR=net/0.92;
+    h+=`<tr${i===1?' class="hl"':''}><td>${nm}</td><td>${n}回</td><td>${money(c)}</td><td>${money(sal)}</td><td>${money(net)}</td><td class="pm ${pr>=0?'pos':'neg'}">${(pr>=0?'+':'')+money(pr)}</td></tr>`;
+  });
+  $('b_rareTable').innerHTML=h+'</tbody></table>';
+  $('b_oBepR').textContent=money(bepR);
+  const econAvg=180;
+  return {childPnl:p.fU*0.92-(100*p.evt+econAvg*p.econ+2*p.taiU)};
+}
+
+/* ── TAB3 総合（β連動） ── */
+function total(){
+  const p=P();
+  const m=mine(), b=breed();
+  const capex=+$('t_capex').value||0, nb=+$('t_breeds').value||0;
+  const breedP=nb*b.childPnl;
+  const tot=m.profit+breedP;
+  paintPM('t_oMine',m.profit);
+  paintPM('t_oBreed',breedP);
+  paintPM('t_oTotal',tot);
+  $('t_oPayback').textContent=tot>0?fmt(capex/tot,1)+'ヶ月':'回収不能';
+
+  // 総合損益: EVT価格pp時、フロアは fU×(pp/p.evt)^β に連動
+  const flo=pp=>p.evt>0?p.fU*Math.pow(pp/p.evt,p.beta):p.fU;
+  const fn=pp=>(m.E-m.feeEvt)*pp-m.fixed+nb*(flo(pp)*0.92-100*pp-180*p.econ-2*p.taiU);
+  // 数値解BEP（走査＋線形補間）
+  const pMax=Math.max(p.evt*2.5,0.05);
+  let bep=null,prev=fn(0.0001);
+  for(let i=1;i<=800;i++){const x=pMax*i/800,v=fn(x);
+    if(prev<0&&v>=0){const x0=pMax*(i-1)/800;bep=x0+(x-x0)*(-prev)/(v-prev);break;}prev=v;}
+  $('t_oBep').textContent=bep!=null?usd(bep,3):(fn(p.evt)>0?'常時黒字圏':'—（黒字化せず）');
+  chartProfit('t_chart',fn,p.evt,bep,'EVT価格と月次総合損益（フロアβ連動）');
+
+  // シナリオ表
+  const scens=[[0.5,'−50%'],[0.75,'−25%'],[1,'現在'],[1.5,'+50%'],[2,'+100%']];
+  let h='<table><thead><tr><th>EVT価格</th><th>Uncフロア</th><th>採掘/月</th><th>ブリード/月</th><th>合計/月</th><th>回収</th></tr></thead><tbody>';
+  scens.forEach(([mul,lab])=>{
+    const pp=p.evt*mul, f=p.fU*Math.pow(mul,p.beta);
+    const mp=(m.E-m.feeEvt)*pp-m.fixed;
+    const bp=nb*(f*0.92-100*pp-180*p.econ-2*p.taiU);
+    const t=mp+bp;
+    h+=`<tr${mul===1?' class="hl"':''}><td>${usd(pp,3)}（${lab}）</td><td>${money(f,0)}</td><td class="pm ${mp>=0?'pos':'neg'}">${money(mp,0)}</td><td class="pm ${bp>=0?'pos':'neg'}">${money(bp,0)}</td><td class="pm ${t>=0?'pos':'neg'}"><b>${money(t,0)}</b></td><td>${t>0?fmt(capex/t,1)+'ヶ月':'—'}</td></tr>`;
+  });
+  $('t_scen').innerHTML=h+'</tbody></table>';
+
+  $('t_note').innerHTML=`β=${p.beta}：EVT価格が変動すると、Uncフロアは（変動率）<sup>β</sup>で連動する想定（鯛焼き・Econ単価は固定と仮定）。βを1に近づけるほどブリード収入もEVT価格に道連れになり、βが低いほどブリードが下落ヘッジとして機能します。現構成のEVTネットポジション：採掘${fmt(m.E-m.feeEvt,0)} EVT/月 − ブリード消費${100*nb} EVT/月。`;
+}
+
+/* ── DexScreener価格取得 ── */
+$('fetchEvt').addEventListener('click',async()=>{
+  const st=$('fetchStatus');st.textContent='取得中…';
+  try{
+    const r=await fetch('https://api.dexscreener.com/latest/dex/tokens/0x73b895dA1197403B8FBbb179633Ec3Fd526B2fd5');
+    const d=await r.json();
+    const pr=d&&d.pairs&&d.pairs.length?parseFloat(d.pairs[0].priceUsd):NaN;
+    if(!isFinite(pr))throw 0;
+    $('pEvt').value=pr;
+    st.innerHTML=`<span class="green">✓ $${pr} を反映（${new Date().toLocaleTimeString('ja-JP')}時点）</span>`;
+    total();
+  }catch(e){
+    st.innerHTML='<span class="shu">この環境では自動取得できません。</span> <a href="https://dexscreener.com/bsc/0x73b895dA1197403B8FBbb179633Ec3Fd526B2fd5" target="_blank" style="color:var(--blue)">DexScreenerを開いて</a>手動入力してください（HTMLをブラウザで直接開くと自動取得が動きます）。';
+  }
+});
+
+/* ── 感度チャート ── */
+function chartProfit(el,fn,cur,bep,title){
+  const W=640,H=230,L=54,B=26,T=16,R=12;
+  const pMax=Math.max(cur*2.2,(bep||0)*1.6,0.05);
+  const ys=[];for(let i=0;i<=40;i++)ys.push(fn(pMax*i/40));
+  const yMin=Math.min(...ys,0),yMax=Math.max(...ys,0);
+  const px=v=>L+v/pMax*(W-L-R), py=v=>T+(yMax-v)/(yMax-yMin||1)*(H-T-B);
+  let path='';for(let i=0;i<=40;i++){const x=pMax*i/40;path+=(i?'L':'M')+px(x).toFixed(1)+','+py(fn(x)).toFixed(1);}
+  let s=`<line x1="${L}" y1="${py(0)}" x2="${W-R}" y2="${py(0)}" stroke="#8d86a3" stroke-width="1"/>`;
+  s+=`<path d="${path}" fill="none" stroke="#e8b64c" stroke-width="2.5"/>`;
+  s+=`<line x1="${px(cur)}" y1="${T}" x2="${px(cur)}" y2="${H-B}" stroke="#6f9fe0" stroke-dasharray="4 3"/>
+      <text x="${px(cur)}" y="${T-3}" fill="#6f9fe0" font-size="10" text-anchor="middle">現在$${cur}</text>`;
+  if(bep!=null&&bep<=pMax)s+=`<circle cx="${px(bep)}" cy="${py(0)}" r="5" fill="#d05045"/>
+      <text x="${px(bep)}" y="${py(0)+16}" fill="#d05045" font-size="10" text-anchor="middle" font-family="DotGothic16">BEP $${bep.toFixed(3)}</text>`;
+  s+=`<text x="${W-R}" y="${H-6}" fill="#8d86a3" font-size="10" text-anchor="end">EVT価格 →</text>
+      <text x="${L}" y="${T-3}" fill="#8d86a3" font-size="9">${title}（${CUR}/月・縦軸は損益0ラインのみ表示）</text>`;
+  $(el).innerHTML=`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`;
+}
+
+document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',total));
+total();
+</script>
+</body>
+</html>
