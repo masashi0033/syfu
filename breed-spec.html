@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BREED SIM 仕様書｜SyFu TOOLS</title>
-<link rel="icon" type="image/png" href="./assets/favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
 :root{--bg:#14101d;--panel:#1e1930;--panel2:#262040;--line:#3a3258;--ink:#ece5d8;--sub:#8d86a3;--gold:#e8b64c;--gold-soft:#f0d18a;--blue:#6f9fe0;--shu:#d05045;--green:#7fbf7a;--acc:var(--gold)}
@@ -47,7 +46,8 @@ footer a{color:var(--blue);text-decoration:none}
 <div class="wrap">
   <div class="topbar">
     <a class="brand" href="./index.html">
-      <img src="./assets/logo_white.png" alt="SyFu" style="height:20px;width:auto">
+      <img src="./assets/logo_white.png" alt="SyFu" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'">
+      <svg class="pix" viewBox="0 0 16 16" aria-hidden="true"><g fill="#e8b64c"><rect x="3" y="2" width="2" height="2"/><rect x="11" y="2" width="2" height="2"/><rect x="3" y="4" width="10" height="5"/><rect x="4" y="9" width="8" height="5"/><rect x="13" y="6" width="2" height="4"/><rect x="12" y="5" width="2" height="2"/></g><g fill="#14101d"><rect x="5" y="5" width="2" height="2"/><rect x="9" y="5" width="2" height="2"/></g><rect x="6" y="10" width="4" height="2" fill="#d05045"/></svg>
       <b>TOOLS</b>
     </a>
     <a class="back" href="./breed.html">← アプリを開く</a>
@@ -69,7 +69,7 @@ footer a{color:var(--blue);text-decoration:none}
 <li>入力：組み合わせ（U×U／左U×右R／左R×右U／R×R）、左右の親のBreed Count、White鯛焼きの使用有無</li>
 <li>出力：EVT／Econ／鯛焼きの消費量、Rareが出る確率、Elite抽選率</li>
 </ul>
-<p>ポイント：<strong>Econは親のBCが増えるほど高くなります</strong>（1につき+20）。また左右は対等ではなく、Rareを左に置くと右に置くより高くつきます（左Rare+40／右Rare+20）。</p>
+<p>ポイント：<strong>Season 1ではブリード成功ごとにRight Scroll（採掘権NFT）が1個付与</strong>されます（店舗プール解放に使用）。また<strong>Econは親のBCが増えるほど高くなります</strong>（1につき+20）。また左右は対等ではなく、Rareを左に置くと右に置くより高くつきます（左Rare+40／右Rare+20）。</p>
 <h3>タブ02：Rare獲得試算</h3>
 <p><strong>「Rareが出るまで合計いくら？」を運の良し悪し3パターンで出します。</strong></p>
 <div class="tablewrap"><table><thead><tr><th>シナリオ</th><th>意味</th></tr></thead><tbody><tr><td>上振れ</td><td>1回目で当たった場合</td></tr><tr><td>期待値</td><td>平均的な回数（確率50%なら2回、20%なら5回、10%なら10回）</td></tr><tr><td>下振れ（90%tile）</td><td>「90%の人はここまでに当たる」回数。運が悪い側の目安</td></tr></tbody></table></div>
@@ -117,12 +117,17 @@ footer a{color:var(--blue);text-decoration:none}
 </ul>
 <p><strong>Inbreeding判定（子から見た世代で判定）</strong> 親そのものは子の1世代目、親の1G祖先は子の2世代目…と数えます。</p>
 <div class="tablewrap"><table><thead><tr><th>重複位置</th><th>判定</th><th>効果</th></tr></thead><tbody><tr><td>4G×4G</td><td>Stable</td><td>特殊個体なら上振れ抽選</td></tr><tr><td>3G×4G</td><td>Golden</td><td>特殊個体ならより強い上振れ抽選</td></tr><tr><td>3G×3G、2G×4G</td><td>Danger</td><td>Nicks・Genesis premium無効。特殊個体ならSpecial Risk</td></tr><tr><td>2G×2G、2G×3G、1G×どこでも</td><td>Forbidden</td><td>同上（最も危険）</td></tr></tbody></table></div>
-<p><strong>Nicks</strong>：左親の系統→右親の系統が「Z→L／L→V／V→N／N→Z」なら成立。左右4世代×4世代＝最大16候補から<strong>有効3つまで</strong>採用。</p>
+<p><strong>Nicks</strong>：左親の系統→右親の系統が「Z→L／L→V／V→N／N→Z」なら成立。左右4世代×4世代＝最大16候補から<strong>有効3つまで</strong>採用。同系統はNeutral（Season 1では効果なし）、それ以外はNone。</p>
+<p><strong>P-rank下限ルール</strong>（公式明記）</p>
+<div class="tablewrap"><table><thead><tr><th>条件</th><th>子のP-rank下限</th></tr></thead><tbody><tr><td>有効Nicks3つ ＋ 左親P2以上</td><td><strong>P1</strong></td></tr><tr><td>Rare入りブリードでRare抽選に外れた場合</td><td>Uncommon <strong>P2以上</strong></td></tr><tr><td>White鯛焼きでElite当選</td><td>左親のP-rank以上</td></tr><tr><td>Elite個体を左親に使用</td><td>最大3体の子がそのEliteのP-rankを継承</td></tr></tbody></table></div>
+<p><strong>Season 1の全32血統</strong></p>
+<div class="tablewrap"><table><thead><tr><th>群</th><th>血統名</th></tr></thead><tbody><tr><td>[Z] Zenith</td><td>Genesis / Chronos / Nexus / Logos / Vector / Aura / Apex / Equinox</td></tr><tr><td>[L] Luna</td><td>Cobalt / Titanium / Nickel / Palladium / Rhodium / Iridium / Osmium / Chrome</td></tr><tr><td>[V] Vega</td><td>Jasper / Onyx / Zircon / Spinel / Garnet / Topaz / Beryl / Citrine</td></tr><tr><td>[N] Nebula</td><td>Basalt / Granite / Slate / Shale / Gneiss / Marble / Obsidian / Andesite</td></tr></tbody></table></div>
+<p>Pedigree表記は <code>[L] Cobalt-8e2A</code>（群記号＋血統名＋個体識別コード）。<strong>Inbreeding判定は個体識別コード（tokenId）で行う</strong>ため、同じ血統名でもコードが違えば別個体です。OGは標準4群に属さず <code>[OG] Primal-02A7</code> と表示され、OG個体自体はNicks判定に使われません（左に置くと31血統から新血統が発現）。</p>
 <hr>
 <h2>4. 注意事項</h2>
 <ul>
 <li>Golden/Special Riskの当選率、P-rank上振れ幅は<strong>公式非公開</strong>。ツールが保証できるのは「抽選を引く権利のコスト」までです。</li>
-<li>仕様はSeason 1時点のもの。公式のアップデートで数値が変わったら結果は当てになりません。</li>
+<li>仕様はSeason 1時点のもの（2026年7月のGitBook再編に照合済み。ブリードのコア数値＝EVT 100/120/140/160・Rare率50/20/10%・Econ表・Inbreeding表に変更なし）。公式のアップデートで数値が変わったら結果は当てになりません。</li>
 <li>タブ05の家系図は「全祖先」ではなく「注目個体だけ登録」する簡易方式です。登録漏れがあるとInbreeding判定も漏れます。</li>
 <li>登録データは保存されません（画面を閉じると消えます）。</li>
 <li>本ツールは収益・当選を保証しません。投資は自己責任で。</li>

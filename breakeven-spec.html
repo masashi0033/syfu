@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BREAK-EVEN 仕様書｜SyFu TOOLS</title>
-<link rel="icon" type="image/png" href="./assets/favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
 :root{--bg:#14101d;--panel:#1e1930;--panel2:#262040;--line:#3a3258;--ink:#ece5d8;--sub:#8d86a3;--gold:#e8b64c;--gold-soft:#f0d18a;--blue:#6f9fe0;--shu:#d05045;--green:#7fbf7a;--acc:var(--blue)}
@@ -47,7 +46,8 @@ footer a{color:var(--blue);text-decoration:none}
 <div class="wrap">
   <div class="topbar">
     <a class="brand" href="./index.html">
-      <img src="./assets/logo_white.png" alt="SyFu" style="height:20px;width:auto">
+      <img src="./assets/logo_white.png" alt="SyFu" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'">
+      <svg class="pix" viewBox="0 0 16 16" aria-hidden="true"><g fill="#e8b64c"><rect x="3" y="2" width="2" height="2"/><rect x="11" y="2" width="2" height="2"/><rect x="3" y="4" width="10" height="5"/><rect x="4" y="9" width="8" height="5"/><rect x="13" y="6" width="2" height="4"/><rect x="12" y="5" width="2" height="2"/></g><g fill="#14101d"><rect x="5" y="5" width="2" height="2"/><rect x="9" y="5" width="2" height="2"/></g><rect x="6" y="10" width="4" height="2" fill="#d05045"/></svg>
       <b>TOOLS</b>
     </a>
     <a class="back" href="./breakeven.html">← アプリを開く</a>
@@ -81,18 +81,22 @@ footer a{color:var(--blue);text-decoration:none}
 <p><strong>初期値はすべてダミーです。必ず実勢の数字に置き換えてから判断してください。</strong></p>
 <h3>タブ01：採掘損益（BIND）</h3>
 <p><strong>「毎日お店でチェックインして稼ぐ活動は黒字か？」を月次で計算します。</strong></p>
+<p><strong>Trust Rank（S〜D）が収入の上限を決めます。</strong> これはユーザーの信用度ランクで、月間のBIND上限額・EVT獲得率・出金待機時間が変わります。新規ユーザーはDから始まります。</p>
+<div class="tablewrap"><table><thead><tr><th>Rank</th><th>日次BIND上限</th><th>月間BIND上限</th><th>EVT率</th><th>出金待機</th></tr></thead><tbody><tr><td>S</td><td>$200</td><td>$3,000</td><td>100%</td><td>24h</td></tr><tr><td>A</td><td>$100</td><td>$2,000</td><td>100%</td><td>48h</td></tr><tr><td>B</td><td>$50</td><td>$1,500</td><td>自動100% / 手動50%</td><td>72h</td></tr><tr><td>C</td><td>$30</td><td>$900</td><td>手動50%</td><td>72h</td></tr><tr><td>D</td><td>$15</td><td>$450</td><td>25%</td><td>72h</td></tr></tbody></table></div>
+<p>Rankを上げるには「決済データの自動連携」「Uncommon以上/Genesis NFTの保有」「BIND実績の積み上げ」が効きます。<strong>自動連携するだけでA以上が狙え、EVT率が25%→100%に跳ね上がる</strong>ため、収支インパクトが最も大きい項目です。</p>
 <ul>
-<li>入力：1日の平均EVT獲得枚数（※獲得レートは公式非公開なので、自分の実績から入力）、稼働日数、寿命消費%（EVT100枚あたり・実測）、Durability軽減、月間Econ消費、出金回数、Pass加入</li>
+<li>入力：Trust Rank、取込方式（自動/手動）、月間BIND額（$）、Earn Rate（%）、寿命消費%（EVT100枚あたり・実測）、Durability軽減、月間Econ消費、出金回数、Pass加入</li>
+<li>上限超過分は自動で無効化され、警告が出ます</li>
 <li>出力：月間EVT獲得・収入・寿命消費％・寿命コスト・その他コスト・<strong>1EVTあたりの採掘原価</strong>・月次損益</li>
 </ul>
 <p>一番大事な出力は金枠の<strong>「損益分岐EVT価格」</strong>。現在のEVT価格がこれより上なら黒字、下なら赤字です。寿命コストがドル固定（$50のCommonにペッグ）なので、この分岐価格はEVT相場が動いても変わらない、というのがSyFuの構造です。</p>
-<p>計算式（ざっくり）： ``<code> 収入      ＝ 月間EVT × EVT価格 ×（Pass加入なら1.10） 寿命コスト＝ 月間EVT × 寿命係数 ×（1−Durability）× $1.52 損益      ＝ 収入 − 寿命コスト − Econコスト − Pass$4 − 出金手数料 分岐価格  ＝（寿命コスト＋Econ＋Pass）÷（月間EVT − 出金手数料分のEVT） </code>``</p>
+<p>計算式（ざっくり）： ``<code> 月間EVT   ＝ min(BIND額, Rank上限) × Earn Rate × 10 × Rank EVT率 ×（Pass加入なら1.10） 収入      ＝ 月間EVT × EVT価格 寿命コスト＝ 月間EVT × 寿命係数 ×（1−Durability）× $1.52 損益      ＝ 収入 − 寿命コスト − Econコスト − Pass$4 − 出金手数料 分岐価格  ＝（寿命コスト＋Econ＋Pass）÷（月間EVT − 出金手数料分のEVT） </code>``</p>
 <h3>タブ02：ブリード損益</h3>
 <p><strong>「子NFTを1体作って売ったら儲かるか？」を計算します。</strong></p>
 <p>上段（Uncommon量産・U×U）：</p>
 <ul>
 <li>子1体コスト＝100 EVT＋Econ（初回100／ペア5回平均180から選択）＋Unc鯛焼き2枚</li>
-<li>収入＝フロア×0.92（ロイヤリティ8%を引いた手取り）</li>
+<li>収入＝フロア×0.92（ロイヤリティ8%を引いた手取り）＋<strong>Right Scroll価値</strong>（Season 1はブリード成功ごとに1個付与。$入力欄に想定価値を入れると収入に加算。0で無視）</li>
 <li>金枠に<strong>「損益分岐フロア」</strong>＝これ未満のフロアでは作るほど赤字、という境目の価格</li>
 </ul>
 <p>出口として「Naturalization（自然化）」も選べますが、これは<strong>100 EVT払って85 EVTしか返らない仕組み</strong>（途中で計15 EVTがバーンされる）なので、単体では必ず赤字。「売れ残りの最低保証」と理解してください。</p>
@@ -126,12 +130,12 @@ footer a{color:var(--blue);text-decoration:none}
 </ol>
 <hr>
 <h2>4. 計算根拠（公式GitBookで確認済みの数値）</h2>
-<div class="tablewrap"><table><thead><tr><th>項目</th><th>値</th></tr></thead><tbody><tr><td>Common NFT価格</td><td>$50固定（運営が常時販売）</td></tr><tr><td>寿命回復</td><td>Common1体＝33%回復 →寿命1%≒$1.52のドルペッグ</td></tr><tr><td>HP消費</td><td>チェックインごと3%（Durabilityで軽減）</td></tr><tr><td>ロイヤリティ</td><td>二次販売の8%（売り手負担）</td></tr><tr><td>EVT出金手数料</td><td>1回1 EVT固定（最低出金20 EVT）</td></tr><tr><td>SyFu Pass</td><td>$4/月、EVT獲得+10%</td></tr><tr><td>ブリードEVT</td><td>100／120／140／160（組み合わせ別）</td></tr><tr><td>Naturalization</td><td>100 EVT基準→バーン後85 EVT返却</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th>項目</th><th>値</th></tr></thead><tbody><tr><td>Common NFT価格</td><td>$50固定（運営が常時販売）</td></tr><tr><td>寿命回復</td><td>Common1体＝33%回復 →寿命1%≒$1.52のドルペッグ</td></tr><tr><td>HP消費</td><td>チェックインごと3%（Durabilityで軽減）</td></tr><tr><td>ロイヤリティ</td><td>二次販売の8%（売り手負担）</td></tr><tr><td>EVT出金手数料</td><td>1回1 EVT固定（最低出金20 EVT）</td></tr><tr><td>SyFu Pass</td><td>$4/月、EVT獲得+10%・EXP+20%・同時育成2体・チェックイン回復5回/24h</td></tr><tr><td>EVT獲得式</td><td>BIND額 × Earn Rate × 10（Econモードは×100）</td></tr><tr><td>月間BIND上限</td><td>S $3,000／A $2,000／B $1,500／C $900／D $450</td></tr><tr><td>Trust Rank EVT率</td><td>S/A 100%／B 自動100%・手動50%／C 50%／D 25%</td></tr><tr><td>NFT出金手数料</td><td>2 EVT/体（固定）</td></tr><tr><td>Right Scroll</td><td>Season 1：ブリード成功ごとに付与。店舗プール（20%）解放・+20%効率</td></tr><tr><td>ブリードEVT</td><td>100／120／140／160（組み合わせ別）</td></tr><tr><td>Naturalization</td><td>100 EVT基準→バーン後85 EVT返却</td></tr></tbody></table></div>
 <h2>5. 注意事項</h2>
 <ul>
-<li><strong>非公開パラメータ</strong>：EVT獲得レート（X/Y/Z%）と寿命消費係数は公式非公開。アプリ内の自分の実測値を入力する前提です。</li>
+<li><strong>非公開パラメータ</strong>：Earn Rate（支払い帯 $1-15/$15-100/$100+固定 のX/Y/Z%）と寿命消費係数は公式非公開。アプリUI表示値・実測値を入力する前提です。\n- <strong>EVTプールの難易度調整</strong>：国プールの消費率が50%/75%/90%を超えると採掘効率が段階的に低下します（本ツールでは考慮外）。</li>
 <li>フロアとEVT価格の連動（β）はあくまで仮定モデル。暴落時は流動性が消えて「フロアはあるのに売れない」事態も起こります。</li>
-<li>Trust Rankが下がると出金待機や報酬条件が悪化しますが、本ツールでは考慮外です。</li>
+<li>Trust Rankは条件を満たさなくなると<strong>即座に降格</strong>します（NFTを売却した瞬間など）。降格するとBIND上限・EVT率が下がり収支が悪化します。</li>
 <li>入力データは保存されません。</li>
 <li>本ツールは収益を保証しません。Web3ゲームは原資を失うリスクがあります。余剰資金で。</li>
 </ul>

@@ -393,6 +393,15 @@ tr.hl td{background:rgba(232,182,76,.07)}
     </select>
     <button class="btn" id="recGo">最適ペアを計算</button>
     <div id="recOut"></div>
+    <h3 style="margin-top:16px">Season 1 血統名リファレンス（全32血統）</h3>
+    <div class="note" style="line-height:1.9">
+      <b style="color:var(--gold)">[Z] Zenith</b>：Genesis / Chronos / Nexus / Logos / Vector / Aura / Apex / Equinox<br>
+      <b style="color:var(--blue)">[L] Luna</b>：Cobalt / Titanium / Nickel / Palladium / Rhodium / Iridium / Osmium / Chrome<br>
+      <b style="color:var(--green)">[V] Vega</b>：Jasper / Onyx / Zircon / Spinel / Garnet / Topaz / Beryl / Citrine<br>
+      <b style="color:var(--tai)">[N] Nebula</b>：Basalt / Granite / Slate / Shale / Gneiss / Marble / Obsidian / Andesite
+    </div>
+    <p class="note" style="margin-top:8px">Pedigree表記は <code style="color:var(--gold)">[L] Cobalt-8e2A</code> の形式（群記号＋血統名＋個体識別コード）。Inbreeding判定は血統名でなく<b>個体識別コード（tokenId）</b>で行われるため、同じCobaltでもコードが違えば別個体です。OGは標準4群に属さず <code style="color:var(--gold)">[OG] Primal-02A7</code> と表示され、OG個体自体はNicks判定に使われません（左に置くと31血統から新血統が発現）。</p>
+
   </div>
 </section>
 
@@ -783,7 +792,7 @@ const GOALS={
    why:e=>`Rare P0固定抽選 ${e.rate*100}%。外れてもUncommon P2以上${e.nicks?`＋Nicks×${e.nicks}で更に上振れ可`:''}。${e.bad?'※Danger/Forbidden重複ありNicks無効（固定抽選率は不変）。':''}R×R以外はRare親の5回枠を消費する点に注意。`},
  prank:{f:e=>e.valid&&!e.bad,
    s:e=>e.nicks*100+(e.genesis?60:0)+(e.L.p>=2?30:0)+(e.goodSp?(e.goodSp.rank==='golden'?40:20):0)-e.econ*0.05,
-   why:e=>`有効Nicks×${e.nicks}${e.genesis?'＋Genesis premium':''}${e.L.p>=2?`。左親P${e.L.p}のため子の下限が引き上げ`:'。左親をP2以上にすると下限P1が狙えます'}${e.goodSp?`。${e.goodSp.rank==='golden'?'Golden':'Stable'}のGood Inbreedingも同時成立`:''}。`},
+   why:e=>`有効Nicks×${e.nicks}${e.genesis?'＋Genesis premium':''}${e.L.p>=2?(e.nicks===3?`。Nicks3＋左親P${e.L.p}（P2以上）で子の下限P1が確定`:`。左親P${e.L.p}。Nicksを3まで揃えると下限P1が確定`):'。左親をP2以上＋Nicks3で下限P1が確定します'}${e.goodSp?`。${e.goodSp.rank==='golden'?'Golden':'Stable'}のGood Inbreedingも同時成立`:''}。`},
  golden:{f:e=>e.valid&&!!e.goodSp,
    s:e=>(e.goodSp&&e.goodSp.rank==='golden'?100:60)+e.nicks*10+(e.genesis?15:0)-e.econ*0.05,
    why:e=>`特殊個体「${e.goodSp.id}」が${e.goodSp.gL}G×${e.goodSp.gR}G＝${e.goodSp.rank==='golden'?'Golden':'Stable'}で重複 → Rare/P-rank上振れ抽選（当選率非公開）${e.nicks?`。Nicks×${e.nicks}併用可`:''}。`},
@@ -817,6 +826,7 @@ $('recGo').addEventListener('click',()=>{
     if(e.rate)chips.push(`<span class="chip g">Rare ${e.rate*100}%</span>`);
     if(e.nicks)chips.push(`<span class="chip b">Nicks×${e.nicks}</span>`);
     if(e.genesis)chips.push(`<span class="chip g">Genesis+</span>`);
+    if(!e.bad&&e.nicks===3&&e.L.p>=2)chips.push(`<span class="chip gr">下限P1確定</span>`);
     if(e.main)chips.push(`<span class="chip ${e.main.rank==='golden'||e.main.rank==='stable'?(e.main.special?'gr':''):'r'}">${IB_LABEL[e.main.rank]}${e.main.special?'（特殊個体）':''}</span>`);
     if(e.combo==='uu'&&$('goal').value==='elite')chips.push(`<span class="chip g">Elite 50%</span>`);
     const taiTxt=$('goal').value==='elite'&&e.combo==='uu'?'Unc×1＋White×1':taiLabel(e.combo,false);

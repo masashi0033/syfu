@@ -124,9 +124,22 @@ tr.hl td{background:rgba(232,182,76,.07)}
   <div class="card">
     <h2>▸ 採掘（Check-in→BIND→EVT）の月次損益</h2>
     <div class="row">
-      <div><label class="fl">1日の平均EVT獲得枚数</label><input type="number" id="m_evtDay" value="20" step="1" min="0"></div>
-      <div><label class="fl">稼働日数/月</label><input type="number" id="m_days" value="30" step="1" min="0" max="31"></div>
+      <div><label class="fl">Trust Rank</label>
+        <select id="m_rank">
+          <option value="S">S（月$3,000・EVT率100%）</option>
+          <option value="A">A（月$2,000・100%）</option>
+          <option value="B" selected>B（月$1,500・自動100%/手動50%）</option>
+          <option value="C">C（月$900・50%）</option>
+          <option value="D">D（月$450・25%）</option>
+        </select></div>
+      <div><label class="fl">取込方式</label>
+        <select id="m_import"><option value="auto">自動連携</option><option value="manual">手動アップロード</option></select></div>
     </div>
+    <div class="row">
+      <div><label class="fl">月間BIND額 <b>$</b>（有効分）</label><input type="number" id="m_bind" value="1500" step="50" min="0"></div>
+      <div><label class="fl">Earn Rate <b>%</b>（帯別・アプリUI表示値）</label><input type="number" id="m_rate" value="10" step="0.5" min="0"></div>
+    </div>
+    <p class="note" id="m_capnote" style="margin-top:4px"></p>
     <div class="row">
       <div><label class="fl">寿命消費% / EVT100枚（実測）</label><input type="number" id="m_lifeCoef" value="5" step="0.5" min="0"></div>
       <div><label class="fl">Durability軽減（0〜20%）</label><input type="number" id="m_dur" value="12" step="1.2" min="0" max="20"></div>
@@ -138,7 +151,7 @@ tr.hl td{background:rgba(232,182,76,.07)}
     <label class="chk"><input type="checkbox" id="m_pass" checked><span>SyFu Pass Standard（$4/月・EVT+10%）</span></label>
 
     <div class="stats">
-      <div class="stat"><div class="k">月間EVT獲得</div><div class="v gold" id="m_oEvt">—</div></div>
+      <div class="stat"><div class="k">月間EVT獲得</div><div class="v gold" id="m_oEvt">—</div><div class="u" id="m_oRank"></div></div>
       <div class="stat"><div class="k">月間収入</div><div class="v" id="m_oRev">—</div><div class="u">USD</div></div>
       <div class="stat"><div class="k">寿命消費</div><div class="v shu" id="m_oLife">—</div><div class="u">%/月</div></div>
     </div>
@@ -151,7 +164,7 @@ tr.hl td{background:rgba(232,182,76,.07)}
     <div class="bep"><div class="k">損益分岐EVT価格</div><div class="v" id="m_oBep">—</div>
       <div class="s">現在価格がこれを上回れば採掘黒字。寿命回復はCommon $50固定ペッグ（1%≒$1.52）のためUSD建てで固定。</div></div>
     <div class="chart"><div id="m_chart"></div></div>
-    <p class="note info">仕様根拠：寿命回復 Common1体=33%（$50）／EVT回復式も「寿命%×基準USD×EVTレート」でUSDペッグ。EVT出金は1EVT固定・最低20EVT。Pass +10%はEVT獲得に乗算。HP消費3%/チェックイン（Durabilityで最大30%軽減）→回復はEconのため「月間Econ消費」に含めて入力。</p>
+    <p class="note info">仕様根拠：EVT獲得＝BIND額×Earn Rate×10（GitBook 5.2）に、Trust RankのEVT率（8.2：S/A=100%、B=自動100%/手動50%、C=50%、D=25%）と月間BIND上限（S$3,000〜D$450）、Pass+10%を乗算。寿命回復はCommon1体=33%（$50）のUSDペッグ。EVT出金1EVT固定・最低20EVT、出金待機はRank依存（S=24h〜D=72h）。HP回復等のEconは「月間Econ消費」に含めて入力。Earn Rateは支払い帯（$1-15/$15-100/$100+固定）で変動・非公開のためアプリUI表示値を入力。</p>
   </div>
 </section>
 
@@ -171,13 +184,15 @@ tr.hl td{background:rgba(232,182,76,.07)}
           <option value="nat">Naturalization（85 EVT回収・将来実装）</option>
         </select></div>
     </div>
+    <label class="fl">Right Scroll想定価値 <b>$/個</b>（S1：ブリード成功ごとに1個付与・0で無視）</label>
+    <input type="number" id="b_rs" value="0" step="1" min="0">
     <div class="stats">
       <div class="stat"><div class="k">子1体コスト</div><div class="v" id="b_oCost">—</div><div class="u">USD</div></div>
       <div class="stat"><div class="k">子1体収入</div><div class="v" id="b_oRev">—</div><div class="u">USD</div></div>
       <div class="stat"><div class="k">1体あたり損益</div><div class="v pm" id="b_oPnl">—</div><div class="u">USD</div></div>
     </div>
     <div class="bep"><div class="k">損益分岐 Uncommonフロア</div><div class="v" id="b_oBepF">—</div>
-      <div class="s">フロア×0.92＝コストとなる価格。これ未満のフロアでは量産するほど赤字。</div></div>
+      <div class="s">（フロア×0.92＋Right Scroll価値）＝コストとなる価格。これ未満のフロアでは量産するほど赤字。</div></div>
     <p class="note warn" id="b_natNote">Naturalizationは100 EVT基準から計7.5+7.5がバーンされ<b>返却85 EVT</b>。ブリードに100 EVT払う構造上、自然化出口は<b>単体で必ず赤字（EVT建て−15＋Econ＋鯛焼き）</b>＝利益源ではなく「売れない子の回収下限」です。要・寿命100%。</p>
   </div>
 
@@ -244,21 +259,36 @@ function P(){CUR=$('pCur').value;JPY=+$('pJpy').value||155;
   econ:+$('pEcon').value||0, taiU:+$('pTaiU').value||0, taiR:+$('pTaiR').value||0,
   beta:+$('pBeta').value};}
 
-/* ── TAB1 採掘 ── */
+/* ── TAB1 採掘（Trust Rank連動・GitBook 5.2/8.2） ── */
+const RANKS={
+  S:{cap:3000, auto:1.00, manual:1.00, wait:'24h'},
+  A:{cap:2000, auto:1.00, manual:1.00, wait:'48h'},
+  B:{cap:1500, auto:1.00, manual:0.50, wait:'72h'},
+  C:{cap: 900, auto:0.50, manual:0.50, wait:'72h'},
+  D:{cap: 450, auto:0.25, manual:0.25, wait:'72h'},
+};
 function mine(){
   const p=P();
-  const evtDay=+$('m_evtDay').value||0, days=+$('m_days').value||0;
+  const rk=$('m_rank').value, imp=$('m_import').value;
+  const R=RANKS[rk];
+  const bind=+$('m_bind').value||0, rate=(+$('m_rate').value||0)/100;
+  const bindEff=Math.min(bind,R.cap);
+  const rankRate=R[imp];
   const coef=+$('m_lifeCoef').value||0, dur=Math.min(20,+$('m_dur').value||0)/100;
   const econM=+$('m_econ').value||0, wd=+$('m_wd').value||0, pass=$('m_pass').checked;
-  const E=evtDay*days*(pass?1.10:1);                 // 月間EVT
-  const lifePct=E*(coef/100)*(1-dur);                // 月間寿命消費%
-  const lifeC=lifePct*LIFE_USD;                      // USDペッグ
+  const E=bindEff*rate*10*rankRate*(pass?1.10:1);   // BIND×Rate×10×Rank率×Pass
+  const lifePct=E*(coef/100)*(1-dur);
+  const lifeC=lifePct*LIFE_USD;
   const econC=econM*p.econ, passC=pass?4:0, feeEvt=wd*1;
   const rev=E*p.evt, feeC=feeEvt*p.evt;
   const profit=rev-lifeC-econC-passC-feeC;
-  const unit=E>0?(lifeC+econC+passC)/(E-feeEvt||1):0;
+  const unit=E>feeEvt?(lifeC+econC+passC)/(E-feeEvt):0;
   const bep=E-feeEvt>0?(lifeC+econC+passC)/(E-feeEvt):0;
+  $('m_capnote').innerHTML = (bind>R.cap
+    ? `<span class="shu">⚠ 月間BIND上限（Rank ${rk}＝$${fmt(R.cap,0)}）超過分は無効。有効BIND額 $${fmt(bindEff,0)} で計算。</span>`
+    : `Rank ${rk}：月間上限 $${fmt(R.cap,0)}／EVT率 ${Math.round(rankRate*100)}%（${imp==='auto'?'自動':'手動'}）／出金待機 ${R.wait}`);
   $('m_oEvt').textContent=fmt(E,0);
+  $('m_oRank').textContent=`Rank ${rk}・率${Math.round(rankRate*100)}%`;
   $('m_oRev').textContent=money(rev);
   $('m_oLife').textContent=fmt(lifePct,1);
   $('m_oLifeC').textContent=money(lifeC);
@@ -271,25 +301,26 @@ function mine(){
 }
 function paintPM(id,v){const el=$(id);el.textContent=(v>=0?'+':'')+money(v);el.className=el.className.replace(/ (pos|neg)/g,'')+(v>=0?' pos':' neg');}
 
-/* ── TAB2 ブリード ── */
+/* ── TAB2 ブリード（S1：成功ごとにRight Scroll付与） ── */
 function breed(){
   const p=P();
   const econAmt=$('b_econMode').value==='first'?100:180;
+  const rs=+$('b_rs').value||0;
   const cost=100*p.evt+econAmt*p.econ+2*p.taiU;
   const exit=$('b_exit').value;
-  const rev=exit==='floor'?p.fU*0.92:85*p.evt;
+  const rev=(exit==='floor'?p.fU*0.92:85*p.evt)+rs;
   const pnl=rev-cost;
   $('b_oCost').textContent=money(cost);
   $('b_oRev').textContent=money(rev);
   paintPM('b_oPnl',pnl);
-  $('b_oBepF').textContent=money(cost/0.92);
-  // Rare (R×R): 上振れ1/期待2/下振れ4回。Econ累計160,360,880。外れ子=試行-1体をフロア回収
+  $('b_oBepF').textContent=money(Math.max(0,(cost-rs)/0.92));
+  // Rare (R×R): 上振れ1/期待2/下振れ4回。Econ累計160,360,880。外れ子=試行-1体をフロア回収＋各回RS
   const rows=[['上振れ',1,160],['期待値',2,360],['下振れ90%',4,880]];
-  let h='<table><thead><tr><th>シナリオ</th><th>試行</th><th>総コスト</th><th>外れ子回収</th><th>純コスト</th><th>Rareフロア損益</th></tr></thead><tbody>';
+  let h='<table><thead><tr><th>シナリオ</th><th>試行</th><th>総コスト</th><th>外れ子+RS回収</th><th>純コスト</th><th>Rareフロア損益</th></tr></thead><tbody>';
   let bepR=0;
   rows.forEach(([nm,n,econSum],i)=>{
     const c=n*160*p.evt+econSum*p.econ+n*2*p.taiR;
-    const sal=(n-1)*p.fU*0.92;
+    const sal=(n-1)*p.fU*0.92+n*rs;
     const net=c-sal;
     const pr=p.fR*0.92-net;
     if(i===1)bepR=net/0.92;
@@ -297,8 +328,7 @@ function breed(){
   });
   $('b_rareTable').innerHTML=h+'</tbody></table>';
   $('b_oBepR').textContent=money(bepR);
-  const econAvg=180;
-  return {childPnl:p.fU*0.92-(100*p.evt+econAvg*p.econ+2*p.taiU)};
+  return {childPnl:p.fU*0.92+rs-(100*p.evt+180*p.econ+2*p.taiU), rs};
 }
 
 /* ── TAB3 総合（β連動） ── */
@@ -315,7 +345,9 @@ function total(){
 
   // 総合損益: EVT価格pp時、フロアは fU×(pp/p.evt)^β に連動
   const flo=pp=>p.evt>0?p.fU*Math.pow(pp/p.evt,p.beta):p.fU;
-  const fn=pp=>(m.E-m.feeEvt)*pp-m.fixed+nb*(flo(pp)*0.92-100*pp-180*p.econ-2*p.taiU);
+  const rs0=b.rs||0;
+  const rsF=pp=>p.evt>0?rs0*Math.pow(pp/p.evt,p.beta):rs0;
+  const fn=pp=>(m.E-m.feeEvt)*pp-m.fixed+nb*(flo(pp)*0.92+rsF(pp)-100*pp-180*p.econ-2*p.taiU);
   // 数値解BEP（走査＋線形補間）
   const pMax=Math.max(p.evt*2.5,0.05);
   let bep=null,prev=fn(0.0001);
@@ -330,13 +362,13 @@ function total(){
   scens.forEach(([mul,lab])=>{
     const pp=p.evt*mul, f=p.fU*Math.pow(mul,p.beta);
     const mp=(m.E-m.feeEvt)*pp-m.fixed;
-    const bp=nb*(f*0.92-100*pp-180*p.econ-2*p.taiU);
+    const bp=nb*(f*0.92+rs0*Math.pow(mul,p.beta)-100*pp-180*p.econ-2*p.taiU);
     const t=mp+bp;
     h+=`<tr${mul===1?' class="hl"':''}><td>${usd(pp,3)}（${lab}）</td><td>${money(f,0)}</td><td class="pm ${mp>=0?'pos':'neg'}">${money(mp,0)}</td><td class="pm ${bp>=0?'pos':'neg'}">${money(bp,0)}</td><td class="pm ${t>=0?'pos':'neg'}"><b>${money(t,0)}</b></td><td>${t>0?fmt(capex/t,1)+'ヶ月':'—'}</td></tr>`;
   });
   $('t_scen').innerHTML=h+'</tbody></table>';
 
-  $('t_note').innerHTML=`β=${p.beta}：EVT価格が変動すると、Uncフロアは（変動率）<sup>β</sup>で連動する想定（鯛焼き・Econ単価は固定と仮定）。βを1に近づけるほどブリード収入もEVT価格に道連れになり、βが低いほどブリードが下落ヘッジとして機能します。現構成のEVTネットポジション：採掘${fmt(m.E-m.feeEvt,0)} EVT/月 − ブリード消費${100*nb} EVT/月。`;
+  $('t_note').innerHTML=`β=${p.beta}：EVT価格が変動すると、Uncフロアは（変動率）<sup>β</sup>で連動する想定（鯛焼き・Econ単価は固定と仮定）。βを1に近づけるほどブリード収入もEVT価格に道連れになり、βが低いほどブリードが下落ヘッジとして機能します。現構成のEVTネットポジション：採掘${fmt(m.E-m.feeEvt,0)} EVT/月 − ブリード消費${100*nb} EVT/月。Right Scroll価値もβ連動想定。`;
 }
 
 /* ── DexScreener価格取得 ── */
